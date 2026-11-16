@@ -84,6 +84,24 @@ h1,h2,h3{margin:.3em 0}
 #hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(36,40,50,.82);color:#fff;border-radius:10px;padding:5px 14px;font-size:14px;pointer-events:none;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;z-index:4}
 #mapBox #pad{left:auto;right:10px}
 .avs canvas{display:block;width:48px;height:48px}
+.avs{flex-wrap:wrap}
+.avs .avc{display:flex;flex-direction:column;align-items:center;padding:4px 8px}
+.avs .avc small{font-size:11px;color:var(--g);font-weight:bold;white-space:nowrap}
+/* 紙娃娃 */
+.dress{display:flex;gap:14px;align-items:flex-start;flex-wrap:wrap}
+.dprev{flex:0 0 160px;text-align:center;background:linear-gradient(#e8f6ec,#cfe9d6);border-radius:16px;padding:8px}
+.dprev canvas{width:150px;height:170px}
+.dprev .row button{padding:4px 12px;font-size:15px}
+.dopts{flex:1 1 300px;min-width:0}
+.drow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px dashed #e3e9e5}
+.drow b{flex:0 0 42px;font-size:15px}
+.dsw{display:flex;flex-wrap:wrap;gap:5px}
+.dsw .sw{width:28px;height:28px;padding:0;border-radius:50%;border:3px solid #fff;box-shadow:0 0 0 2px #c5cbc7}
+.dsw .sw.on{box-shadow:0 0 0 3px var(--g)}
+.dsw .tx{padding:4px 10px;font-size:14px;background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:none;font-weight:normal}
+.dsw .tx.on{border-color:var(--g);background:var(--g2);font-weight:bold}
+.dsw .tx.lk{opacity:.55}
+@media (max-width:600px){ .dprev{flex-basis:100%} }
 @media (max-width:600px){ #mini{width:100px;height:79px} #hint{font-size:12px} }
 /* 主角 */
 #hero{position:absolute;transform:translate(-50%,-88%);z-index:5;pointer-events:none;display:flex;flex-direction:column;align-items:center}
@@ -195,7 +213,7 @@ table.board tr.me{background:#fff4c2;font-weight:bold}
     </div>
   </div>
   <div class="field"><label>選擇你的角色</label>
-    <div class="avs"><button data-av="0" class="on"><canvas width="48" height="48"></canvas></button><button data-av="1"><canvas width="48" height="48"></canvas></button><button data-av="2"><canvas width="48" height="48"></canvas></button><button data-av="3"><canvas width="48" height="48"></canvas></button></div>
+    <div class="avs"><button data-av="0" class="on"><canvas width="48" height="48"></canvas></button><button data-av="1"><canvas width="48" height="48"></canvas></button><button data-av="2"><canvas width="48" height="48"></canvas></button><button data-av="3"><canvas width="48" height="48"></canvas></button><button data-av="custom" class="avc"><canvas width="48" height="48"></canvas><small>🎨 自己打扮</small></button></div>
   </div>
   <div class="err" id="startErr"></div>
   <div class="row"><button id="btnGo" style="font-size:20px;padding:12px 30px">出發！</button></div>
@@ -217,6 +235,7 @@ table.board tr.me{background:#fff4c2;font-weight:bold}
       <button class="ghost" id="tUp" title="升級">🛠️<span class="tl"> 升級</span></button>
       <button class="ghost" id="tAch" title="標章">🏅<span class="tl"> 標章</span></button>
       <button class="ghost" id="tHid" title="隱藏任務">🎁<span class="tl"> 隱藏</span></button>
+      <button class="ghost" id="tDress" title="紙娃娃換裝">👕<span class="tl"> 換裝</span></button>
       <button class="ghost" id="tBoard" title="排行榜">🏆<span class="tl"> 排行</span></button>
       <button class="ghost" id="tHelp">❓</button>
     </div>
@@ -250,7 +269,7 @@ table.board tr.me{background:#fff4c2;font-weight:bold}
         lv 是適用的最低難度：1＝小樹苗、2＝小樹、3＝大樹
    ===================================================================== */
 const SCHOOL_NAME = '我們的學校';
-const SCRIPT_URL = '';
+const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycby33riswfEYn9V-YvzRGmFQZjk1UCKfDXJriBz7vZ8VEL7pBRL3NV4bWuX8DislhAYD/exec';
 
 // 教學用排放係數（皆為概估值）
 const EF = {
@@ -432,8 +451,12 @@ function carbonIdx(){
 function starsOf(r){ return r>=0.9?3 : r>=0.6?2 : r>=0.4?1 : 0; }
 
 /* ---------------- 開始畫面 ---------------- */
-let pickLv = 0, pickAv = 0;
-document.querySelectorAll('.avs button').forEach(b=>b.onclick=()=>{ pickAv=+b.dataset.av; document.querySelectorAll('.avs button').forEach(x=>x.classList.toggle('on',x===b)); });
+let pickLv = 0, pickAv = 0, pickCustom = null;   // pickCustom：開始畫面「自己打扮」的紙娃娃設定
+function selectAvTile(av){ pickAv=av; document.querySelectorAll('.avs button').forEach(x=>x.classList.toggle('on',x.dataset.av===String(av))); }
+document.querySelectorAll('.avs button').forEach(b=>b.onclick=()=>{
+  if(b.dataset.av==='custom'){ openDresser(false); return; }
+  pickCustom=Object.assign({},PRESETS[+b.dataset.av]); selectAvTile(+b.dataset.av); refreshCustomTile();
+});
 document.querySelectorAll('.lvbtns button').forEach(b=>b.onclick=()=>{ pickLv=+b.dataset.lv; document.querySelectorAll('.lvbtns button').forEach(x=>x.classList.toggle('on',x===b)); });
 $('#inCls').addEventListener('input',e=>{
   const v=e.target.value.replace(/\D/g,''); e.target.value=v;
@@ -455,7 +478,7 @@ $('#btnGo').onclick=()=>{
   if(!pickLv) return $('#startErr').textContent='請選擇挑戰難度';
   const old=load();
   if(old && old.name && !confirm('開始新遊戲會覆蓋這台裝置上的舊紀錄，確定嗎？')) return;
-  S={cls,name,lv:pickLv,av:pickAv,sid:newSid(),best:{},coins:0,up:{},ach:[],t:0,zeroShown:false};
+  S={cls,name,lv:pickLv,custom:Object.assign({},pickCustom||PRESETS[0]),sid:newSid(),best:{},coins:0,up:{},ach:[],t:0,zeroShown:false};
   save(); enterGame(true);
 };
 
@@ -1758,10 +1781,10 @@ function showHidden(){
   let h=`<h2>🎁 隱藏任務（${n}/5）</h2><p style="color:#5a6d60">在校園裡到處走走看看，就會發現隱藏任務！每完成一個：+${HQ_PT} 分、+${HQ_COIN} 綠幣，還能解鎖造型。</p>`;
   Object.entries(HQ).forEach(([k,q])=>{ const seen=S.hq.seen[k]||S.hq.done[k], done=S.hq.done[k], [a,b]=hqProg(k), ac=ACC[q.acc];
     h+=`<div class="ach ${seen?'':'lock'}"><span class="e">${seen?q.ic:'❓'}</span><div style="flex:1"><b>${seen?q.name:'？？？'}</b><br><small>${seen?q.d+`（${k==='cup'?(a===0?'還沒找到杯子':a===1?'找到杯子了，交給營養師吧':'完成'):a+'/'+b}）`:'還沒發現，在校園裡找找看吧！'}</small></div>
-      ${done?`<button class="${S.acc===q.acc?'':'ghost'}" data-acc="${q.acc}" style="font-size:14px;padding:6px 10px">${S.acc===q.acc?'✓ 穿著中':'穿上「'+ac.name+'」'}</button>`:''}</div>`; });
-  if(S.acc) h+=`<div class="row"><button class="gray" data-acc="">脫下造型</button></div>`;
+      ${done?`<span style="font-size:13px;color:#2f9e57;font-weight:bold;white-space:nowrap">🎁 已解鎖「${ac.name}」</span>`:''}</div>`; });
+  h+=`<div class="row"><button id="hDress">👕 到紙娃娃換裝</button></div>`;
   openModal(h);
-  document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{ S.acc=b.dataset.acc||null; save(); setPlayerLook(); showHidden(); });
+  $('#hDress').onclick=()=>openDresser(true);
 }
 
 /* ---------------- 更新與繪製 ---------------- */
@@ -1857,10 +1880,82 @@ function loop(now){
 }
 requestAnimationFrame(loop);
 // 開始畫面的角色預覽
-document.querySelectorAll('.avs canvas').forEach((c,i)=>drawFace(c,LOOKS[i]));
-function setPlayerLook(){ const i=(typeof S.av==='number'&&LOOKS[S.av])?S.av:0; hqInit(); PL.look=Object.assign({},LOOKS[i],(S.acc&&ACC[S.acc])?ACC[S.acc].look:{}); }
+/* ---------------- 紙娃娃系統 ---------------- */
+// 每一類可以自由選；標 lock 的服裝要完成對應的隱藏任務才能穿
+const DRESS={
+  hs:   {label:'髮型', type:'text',  opts:[['short','短髮'],['long','長髮'],['pony','馬尾'],['spiky','刺刺頭'],['bun','包包頭']]},
+  hc:   {label:'髮色', type:'color', opts:['#1f1f1f','#3b2a1a','#6b3e1e','#a0652e','#e0b04a','#b8456a','#5b6fb8']},
+  skin: {label:'膚色', type:'color', opts:['#fbe0c6','#f6d2b0','#f3c9a2','#e8b98f','#c98e62','#9a6640']},
+  shirt:{label:'上衣', type:'color', opts:['#3c8de0','#e86a9a','#3cb371','#f0a030','#9b6bd6','#e25555','#4fc3c3','#ffd447','#f4f4f4','#5a5a5a']},
+  pants:{label:'褲子', type:'color', opts:['#2c3e60','#3a3a3a','#4a3060','#6b4a2a','#3a7a4a','#8a2c3c','#7a8a9a']},
+  hat:  {label:'帽子', type:'text',  opts:[['','不戴'],['cap','紅色棒球帽'],['ecocap','環保小帽','litter'],['helmet','探險安全帽','visit']]},
+  face: {label:'眼鏡', type:'text',  opts:[['','不戴'],['glasses','眼鏡']]},
+  deco: {label:'髮飾', type:'text',  opts:[['','無'],['bow','蝴蝶結','eco']]},
+  outer:{label:'外套', type:'text',  opts:[['','無'],['vest','宣傳大使背心','talk']]},
+  hand: {label:'手上', type:'text',  opts:[['','空手'],['drop','小水滴'],['veg','小菜苗'],['bulb','省電燈泡'],['leaf','綠葉小法杖','cup']]}
+};
+const PRESETS=[
+  {hs:'short',hc:'#3b2a1a',skin:'#f6d2b0',shirt:'#3c8de0',pants:'#2c3e60'},
+  {hs:'long', hc:'#3b2a1a',skin:'#f6d2b0',shirt:'#e86a9a',pants:'#4a3060'},
+  {hs:'spiky',hc:'#1f1f1f',skin:'#e8b98f',shirt:'#3cb371',pants:'#3a3a3a'},
+  {hs:'pony', hc:'#6b3e1e',skin:'#f3c9a2',shirt:'#f0a030',pants:'#6b4a2a'}
+];
+function buildLook(c){
+  c=Object.assign({hat:'',face:'',deco:'',outer:'',hand:''},PRESETS[0],c||{});
+  return {skin:c.skin, hair:c.hc, shirt:c.shirt, pants:c.pants, long:c.hs==='long', hstyle:c.hs,
+    glasses:c.face==='glasses', bow:c.deco==='bow', vest:c.outer==='vest'?'#7ed957':undefined, item:c.hand||undefined,
+    hat:c.hat==='helmet'?'helmet':(c.hat?'cap':undefined), hatColor:c.hat==='ecocap'?'#2e9d5b':'#e25555'};
+}
+function optLocked(o){ return o[2] && !(S&&S.hq&&S.hq.done&&S.hq.done[o[2]]); }
+function paintAvatar(c,L,dir,scale,oy){ const g=c.getContext('2d'); g.clearRect(0,0,c.width,c.height); g.save(); g.translate(c.width/2-16*scale,oy); g.scale(scale,scale); drawPerson(g,0,0,dir,L,0,true); g.restore(); }
+let dressDir=0, dressCur=null, dressInGame=false;
+const DIRS4=['down','right','up','left'];
+function openDresser(inGame){
+  dressInGame=inGame; dressDir=0;
+  dressCur=Object.assign({hat:'',face:'',deco:'',outer:'',hand:''}, inGame?S.custom:(pickCustom||PRESETS[typeof pickAv==='number'?pickAv:0]));
+  renderDresser();
+}
+function renderDresser(){
+  let h=`<h2>🎨 紙娃娃換裝</h2><div class="dress"><div class="dprev"><canvas id="dPrev" width="150" height="170"></canvas>
+    <div class="row" style="margin-top:4px"><button class="ghost" id="dRotL">↺</button><button class="ghost" id="dRotR">↻</button></div>
+    <div class="row" style="margin-top:4px"><button class="ghost" id="dRand">🎲 隨機</button></div></div><div class="dopts">`;
+  for(const [k,d] of Object.entries(DRESS)){
+    h+=`<div class="drow"><b>${d.label}</b><div class="dsw">`;
+    d.opts.forEach((o,i)=>{
+      if(d.type==='color') h+=`<button class="sw ${dressCur[k]===o?'on':''}" data-k="${k}" data-i="${i}" style="background:${o}" aria-label="${d.label}"></button>`;
+      else { const lock=optLocked(o); h+=`<button class="tx ${dressCur[k]===o[0]?'on':''} ${lock?'lk':''}" data-k="${k}" data-i="${i}" ${lock?`title="完成隱藏任務「${HQ[o[2]].name}」解鎖"`:''}>${lock?'🔒 ':''}${o[1]}</button>`; }
+    });
+    h+='</div></div>';
+  }
+  h+=`</div></div><div class="row"><button id="dOk">✔ 就穿這樣</button><button class="gray" id="dCancel">取消</button></div>`;
+  openModal(h);
+  paintAvatar($('#dPrev'),buildLook(dressCur),DIRS4[dressDir],4,30);
+  document.querySelectorAll('.dsw button').forEach(b=>b.onclick=()=>{ const d=DRESS[b.dataset.k], o=d.opts[+b.dataset.i];
+    if(d.type!=='color'&&optLocked(o)){ toast(`🔒 完成隱藏任務「${HQ[o[2]].name}」才能穿喔！`); return; }
+    dressCur[b.dataset.k]=d.type==='color'?o:o[0]; beep(true); renderDresser(); });
+  $('#dRotL').onclick=()=>{ dressDir=(dressDir+3)%4; renderDresser(); };
+  $('#dRotR').onclick=()=>{ dressDir=(dressDir+1)%4; renderDresser(); };
+  $('#dRand').onclick=()=>{ for(const [k,d] of Object.entries(DRESS)){ const ok=d.opts.filter(o=>d.type==='color'||!optLocked(o)); const o=ok[Math.random()*ok.length|0]; dressCur[k]=d.type==='color'?o:o[0]; } renderDresser(); };
+  $('#dOk').onclick=()=>{
+    if(dressInGame){ S.custom=Object.assign({},dressCur); save(); setPlayerLook(); toast('👕 換好囉！'); }
+    else { pickCustom=Object.assign({},dressCur); selectAvTile('custom'); refreshCustomTile(); }
+    closeModal(); };
+  $('#dCancel').onclick=closeModal;
+}
+function refreshCustomTile(){ const c=document.querySelector('.avc canvas'); if(c) paintAvatar(c,buildLook(pickCustom||PRESETS[0]),'down',1.5,7); }
+// 開始畫面的角色預覽
+document.querySelectorAll('.avs button:not(.avc) canvas').forEach((c,i)=>paintAvatar(c,buildLook(PRESETS[i]),'down',1.5,7));
+pickCustom=Object.assign({},PRESETS[0]); refreshCustomTile();
+function setPlayerLook(){
+  hqInit();
+  if(!S.custom){ // 舊存檔：從以前的角色編號＋隱藏造型轉換
+    const ACCMAP={cap:{hat:'ecocap'},bow:{deco:'bow'},vest:{outer:'vest'},leaf:{hand:'leaf'},helmet:{hat:'helmet'}};
+    S.custom=Object.assign({},PRESETS[(typeof S.av==='number'&&PRESETS[S.av])?S.av:0],S.acc?ACCMAP[S.acc]:{}); save();
+  }
+  PL.look=buildLook(S.custom);
+}
 
-$('#tUp').onclick=showUpgrades; $('#tAch').onclick=showAch; $('#tHid').onclick=showHidden; $('#tBoard').onclick=()=>showBoard('all'); $('#tHelp').onclick=()=>showHelp(false);
+$('#tUp').onclick=showUpgrades; $('#tAch').onclick=showAch; $('#tHid').onclick=showHidden; $('#tDress').onclick=()=>openDresser(true); $('#tBoard').onclick=()=>showBoard('all'); $('#tHelp').onclick=()=>showHelp(false);
 document.addEventListener('keydown',e=>{
   if($('#modal').classList.contains('hidden')) return;
   if(/^[1-4]$/.test(e.key)){ const bs=document.querySelectorAll('#stepBox .opts button'); const b=bs[+e.key-1]; if(b&&!b.disabled) b.click(); }
