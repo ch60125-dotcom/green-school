@@ -1,0 +1,1871 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<title>淨零綠校園大作戰</title>
+<style>
+:root{--g:#2f9e57;--g2:#e8f6ec;--y:#ffcf3f;--r:#e2574c;--b:#2f7fd1;--ink:#24352b;--card:#fff;--line:#d8e6dc}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:"Microsoft JhengHei","PingFang TC","Noto Sans TC",sans-serif;background:#f1f8ee;color:var(--ink);min-height:100vh;-webkit-tap-highlight-color:transparent}
+button{font-family:inherit;cursor:pointer;border:none;border-radius:12px;font-size:17px;padding:10px 18px;background:var(--g);color:#fff;font-weight:bold;box-shadow:0 3px 0 rgba(0,0,0,.18);transition:transform .08s}
+button:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.18)}
+button.ghost{background:#fff;color:var(--g);border:2px solid var(--g)}
+button.gray{background:#9aa7a0}
+button:disabled{opacity:.45;cursor:not-allowed}
+.hidden{display:none!important}
+.wrap{max-width:1000px;margin:0 auto;padding:12px 16px 40px}
+h1,h2,h3{margin:.3em 0}
+/* 開始畫面 */
+#start{max-width:560px;margin:30px auto;background:#fff;border-radius:22px;padding:26px 24px;box-shadow:0 8px 30px rgba(40,90,50,.15);text-align:center}
+#start h1{font-size:32px;color:var(--g)}
+#start .sub{color:#5a6d60;margin-bottom:16px}
+.field{margin:12px 0;text-align:left}
+.field label{display:block;font-weight:bold;margin-bottom:6px}
+.field input{width:100%;font-size:19px;padding:10px 12px;border:2px solid var(--line);border-radius:10px;font-family:inherit}
+.lvbtns{display:flex;gap:8px;flex-wrap:wrap}
+.lvbtns button{flex:1;min-width:120px;background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:none}
+.lvbtns button.on{background:var(--g2);border-color:var(--g);color:var(--g)}
+.err{color:var(--r);min-height:1.4em;margin-top:6px}
+/* HUD */
+#hud{position:sticky;top:0;z-index:20;background:rgba(255,255,255,.95);border-bottom:2px solid var(--line);backdrop-filter:blur(4px)}
+#hud .in{max-width:1000px;margin:0 auto;padding:8px 16px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px}
+#hud .who{font-weight:bold}
+.chip{background:var(--g2);border-radius:20px;padding:4px 12px;font-weight:bold;white-space:nowrap}
+.meter{flex:1 1 220px;min-width:200px}
+.meter .lab{font-size:13px;display:flex;justify-content:space-between}
+.meter .bar{height:14px;background:#e5e5e5;border-radius:8px;overflow:hidden}
+.meter .fill{height:100%;background:linear-gradient(90deg,#3fb56b,#ffcf3f,#e2574c);transition:width .6s}
+#hud .tools{display:flex;gap:6px}
+#hud .tools button{padding:6px 10px;font-size:15px}
+/* 地圖 */
+#mapBox{position:relative;width:100%;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(40,90,50,.18);background:#fff;margin-top:12px;user-select:none}
+#mapBox img{display:block;width:100%;height:auto}
+.spot{position:absolute;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;cursor:pointer;z-index:3}
+.spot .ic{width:46px;height:46px;border-radius:50%;background:#fff;border:3px solid var(--r);display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 3px 10px rgba(0,0,0,.3);animation:pulse 1.6s infinite}
+.spot.done .ic{border-color:var(--g);animation:none}
+.spot.lock .ic{border-color:#999;filter:grayscale(1);animation:none;opacity:.8}
+.spot .nm{margin-top:3px;background:rgba(255,255,255,.95);border-radius:8px;padding:1px 7px;font-size:13px;font-weight:bold;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.spot .st{font-size:12px;line-height:1}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(226,87,76,.55)}50%{box-shadow:0 0 0 10px rgba(226,87,76,0)}}
+.stk{position:absolute;transform:translate(-50%,-50%);font-size:26px;z-index:2;pointer-events:none;filter:drop-shadow(0 2px 2px rgba(0,0,0,.35));animation:pop .5s}
+@keyframes pop{0%{transform:translate(-50%,-50%) scale(0)}70%{transform:translate(-50%,-50%) scale(1.3)}100%{transform:translate(-50%,-50%) scale(1)}}
+.tip{background:#fff;border-radius:14px;padding:10px 14px;margin-top:12px;border-left:6px solid var(--y)}
+.micons{display:flex;gap:5px;flex-wrap:wrap;background:#fff8e6;border:2px solid #e6d3a3;border-radius:22px;padding:4px 6px}
+.bgrp{position:relative;display:inline-flex;gap:3px;padding:2px;border-radius:20px;background:#f0e6cc}
+.bgrp.got{background:linear-gradient(135deg,#ffe27a,#f2b530);box-shadow:0 0 0 2px #e0a020}
+.bgrp em{position:absolute;left:50%;top:-9px;transform:translateX(-50%);font-style:normal;font-size:12px;line-height:1}
+.mi{position:relative;width:36px;height:36px;border-radius:50%;padding:0;background:#e9ecea;border:2px solid #c5cbc7;box-shadow:none;font-size:18px;line-height:1}
+.mi span{filter:grayscale(1);opacity:.55}
+.mi.done{background:#dff5e5;border-color:var(--g)}
+.mi.done span{filter:none;opacity:1}
+.mi.lock span{opacity:.7}
+.mi:not(.done):not(.lock){border-color:#f2c230;animation:miPulse 1.8s infinite}
+@keyframes miPulse{0%,100%{box-shadow:0 0 0 0 rgba(242,194,48,.6)}50%{box-shadow:0 0 0 5px rgba(242,194,48,0)}}
+.mi i{position:absolute;right:-4px;bottom:-4px;background:#ffcf3f;color:#5a3d00;border:1.5px solid #fff;border-radius:9px;font-style:normal;font-size:10px;font-weight:bold;padding:0 4px;line-height:14px}
+.mi i::before{content:'★'}
+@media (max-width:600px){ .mi{width:30px;height:30px;font-size:15px} }
+@media (max-width:640px){
+  #hud{position:static}
+  #hud .in{gap:6px 8px;padding:6px 10px}
+  .tl{display:none}
+  #hud .tools button{padding:5px 9px;font-size:18px}
+  .meter{min-width:140px}
+  .micons{padding:3px 4px;gap:3px}
+}
+.mcard{background:#fff;border-radius:14px;padding:10px 12px;border:2px solid var(--line);cursor:pointer}
+.mcard:hover{border-color:var(--g)}
+.mcard b{display:block}
+.mcard small{color:#5a6d60}
+/* 俯視角校園 */
+#cv{display:block;width:100%;height:auto;touch-action:manipulation;cursor:pointer;background:#86c96e}
+#mini{position:absolute;left:10px;bottom:10px;width:168px;height:132px;border:3px solid #fff8e6;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.35);pointer-events:none;z-index:4}
+#hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(36,40,50,.82);color:#fff;border-radius:10px;padding:5px 14px;font-size:14px;pointer-events:none;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;z-index:4}
+#mapBox #pad{left:auto;right:10px}
+.avs canvas{display:block;width:48px;height:48px}
+@media (max-width:600px){ #mini{width:100px;height:79px} #hint{font-size:12px} }
+/* 主角 */
+#hero{position:absolute;transform:translate(-50%,-88%);z-index:5;pointer-events:none;display:flex;flex-direction:column;align-items:center}
+#hero .hs{font-size:34px;line-height:1;filter:drop-shadow(0 3px 2px rgba(0,0,0,.35))}
+#hero .hs span{display:inline-block}
+#hero.flip .hs span{transform:scaleX(-1)}
+#hero.walk .hs{animation:bob .28s infinite alternate}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-5px)}}
+#hero .hn{font-size:11px;background:#2f7fd1;color:#fff;border-radius:6px;padding:0 6px;font-weight:bold;white-space:nowrap}
+#hero .hb{pointer-events:auto;cursor:pointer;background:#fff;border:3px solid var(--y);border-radius:12px;padding:4px 10px;font-weight:bold;font-size:14px;white-space:nowrap;margin-bottom:5px;box-shadow:0 3px 8px rgba(0,0,0,.25);animation:bub .25s}
+@keyframes bub{from{opacity:0;margin-bottom:-4px}to{opacity:1;margin-bottom:5px}}
+#pad{position:absolute;left:8px;bottom:8px;z-index:6;display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,46px);gap:4px;touch-action:none;user-select:none}
+#pad button{padding:0;font-size:20px;background:rgba(36,53,43,.72);color:#fff;border-radius:12px;box-shadow:none;touch-action:none}
+#pad .act{background:rgba(226,140,40,.9);font-size:15px}
+#mapBox.click #hero,#mapBox.click #pad{display:none}
+@media (hover:hover) and (pointer:fine){ #pad{display:none} }
+#mapBox.walk{cursor:crosshair}
+.avs{display:flex;gap:8px;justify-content:center}
+.avs button{font-size:30px;background:#fff;border:2px solid var(--line);box-shadow:none;padding:6px 12px}
+.avs button.on{border-color:var(--g);background:var(--g2)}
+@media (max-width:600px){ #hero .hs{font-size:24px} #pad{grid-template-columns:repeat(3,40px);grid-template-rows:repeat(3,40px)} }
+/* 視窗 */
+#modal{position:fixed;inset:0;background:rgba(20,40,25,.55);z-index:50;display:flex;align-items:flex-start;justify-content:center;overflow:auto;padding:20px 10px}
+#mbox{background:#fff;border-radius:20px;max-width:760px;width:100%;padding:20px 20px 24px;position:relative;box-shadow:0 10px 40px rgba(0,0,0,.3);margin:auto 0}
+#mclose{position:absolute;right:10px;top:10px;background:#eee;color:#555;padding:4px 12px;box-shadow:none}
+.mhead{display:flex;align-items:center;gap:10px;padding-right:50px}
+.mhead .big{font-size:40px}
+.prog{height:8px;background:#eee;border-radius:5px;margin:10px 0 14px;overflow:hidden}
+.prog div{height:100%;background:var(--b);transition:width .3s}
+.story{background:var(--g2);border-radius:12px;padding:10px 14px;line-height:1.7}
+.q{font-size:20px;font-weight:bold;margin:12px 0;line-height:1.5}
+.opts{display:grid;gap:8px}
+.opts button{background:#fff;color:var(--ink);border:2px solid var(--line);text-align:left;box-shadow:none;font-weight:normal;font-size:18px;padding:12px 14px}
+.opts button.ok{background:#dff5e5;border-color:var(--g);font-weight:bold}
+.opts button.no{background:#fde4e1;border-color:var(--r)}
+.exp{margin-top:10px;padding:10px 12px;border-radius:10px;background:#fff8dc;line-height:1.6}
+.row{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:14px}
+/* 小遊戲 */
+.devs{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:10px;margin-top:12px}
+.dev{background:#fff7d6;border:3px solid #f2c94c;border-radius:14px;padding:10px 6px;text-align:center;cursor:pointer;color:var(--ink);box-shadow:none;font-weight:normal}
+.dev .e{font-size:34px;display:block}
+.dev.off{background:#e9ecea;border-color:#c5cbc7;filter:grayscale(.8)}
+.dev .s{font-size:13px;font-weight:bold}
+.timer{font-weight:bold;color:var(--r);font-size:18px}
+.items{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin:10px 0;min-height:60px}
+.item{background:#fff;border:2px solid var(--line);border-radius:12px;padding:8px 10px;color:var(--ink);box-shadow:none;font-weight:normal;font-size:16px}
+.item.sel{border-color:var(--b);background:#e3efff;transform:scale(1.07)}
+.item.picked{border-color:var(--g);background:#dff5e5;font-weight:bold}
+.item.wrongp{border-color:var(--r);background:#fde4e1}
+.item.miss{border-color:#f2a33a;background:#fff1dc}
+.bins{display:grid;grid-template-columns:repeat(auto-fill,minmax(105px,1fr));gap:8px}
+.bin{background:#5b8a6b;color:#fff;border-radius:12px;padding:10px 4px;text-align:center;font-size:15px}
+.bin .e{font-size:28px;display:block}
+.bin .n{font-size:12px;opacity:.9}
+.roof{display:grid;gap:6px;margin:12px auto;max-width:480px}
+.cell{aspect-ratio:1;border-radius:8px;border:2px dashed #b9a98a;background:#efe6d2;display:flex;align-items:center;justify-content:center;font-size:24px;cursor:pointer;color:var(--ink);padding:0;box-shadow:none}
+.cell.shade{background:#c7cdb9}
+.cell.panel{background:#2c4f8c;border:2px solid #1b2f55}
+.cell.panel.bad{background:#6b7790}
+.stu{display:flex;flex-wrap:wrap;align-items:center;gap:6px;background:#f7faf8;border:2px solid var(--line);border-radius:12px;padding:8px 10px;margin:8px 0}
+.stu .nm{min-width:150px;font-weight:bold}
+.stu button{background:#fff;color:var(--ink);border:2px solid var(--line);box-shadow:none;padding:6px 9px;font-size:15px;font-weight:normal}
+.stu button.on{border-color:var(--b);background:#e3efff;font-weight:bold}
+.stu .fb{flex-basis:100%;font-size:14px}
+.stars{font-size:44px;letter-spacing:4px;text-align:center}
+.res{text-align:center;line-height:1.8;font-size:18px}
+.fact{background:#eef6ff;border-radius:12px;padding:10px 14px;margin-top:10px;line-height:1.7;text-align:left;font-size:16px}
+.ups{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px;margin-top:10px}
+.up{border:2px solid var(--line);border-radius:14px;padding:10px;text-align:center}
+.up .e{font-size:36px}
+.up p{font-size:14px;color:#4b5d51;min-height:3em;margin:4px 0}
+.ach{display:flex;gap:10px;align-items:center;padding:8px;border-bottom:1px solid #eee}
+.ach .e{font-size:30px}
+.ach.lock{opacity:.4;filter:grayscale(1)}
+table.board{width:100%;border-collapse:collapse;font-size:16px}
+table.board td,table.board th{padding:6px;border-bottom:1px solid #eee;text-align:center}
+table.board tr.me{background:#fff4c2;font-weight:bold}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#24352b;color:#fff;padding:10px 18px;border-radius:12px;z-index:90;font-size:17px;max-width:90vw;text-align:center;opacity:0;transition:opacity .3s;pointer-events:none}
+#toast.show{opacity:1}
+/* 獎狀 */
+#cert{position:fixed;inset:0;background:#fff;z-index:80;overflow:auto;padding:20px}
+.certIn{max-width:800px;margin:0 auto;border:12px double #2f9e57;padding:40px 30px;text-align:center;font-size:22px;line-height:1.9}
+.certIn h1{font-size:48px;color:#2f9e57;letter-spacing:12px}
+@media print{ #cert .row{display:none} #cert{position:static;padding:0} body>*:not(#cert){display:none!important} }
+@media (max-width:600px){
+  .spot .ic{width:34px;height:34px;font-size:18px;border-width:2px}
+  .spot .nm{font-size:11px;padding:0 4px}
+  .stk{font-size:18px}
+  .q{font-size:18px}
+  .opts button{font-size:16px}
+  #start h1{font-size:26px}
+}
+</style>
+</head>
+<body>
+
+<!-- 開始畫面 -->
+<div id="start">
+  <div style="font-size:60px">🌏🌱</div>
+  <h1>淨零綠校園大作戰</h1>
+  <div class="sub">校園裡出現了好多 ⚠️「高碳排熱點」！<br>成為淨零小隊長，完成任務、升級校園，讓學校達成淨零！</div>
+  <div class="field"><label>班級（例如 501）</label><input id="inCls" inputmode="numeric" maxlength="4" placeholder="三或四位數字"></div>
+  <div class="field"><label>暱稱（會顯示在排行榜，請勿用真實姓名）</label><input id="inName" maxlength="8" placeholder="最多 8 個字"></div>
+  <div class="field"><label>挑戰難度</label>
+    <div class="lvbtns">
+      <button data-lv="1">🌱 小樹苗<br><small>1～2 年級</small></button>
+      <button data-lv="2">🌿 小樹<br><small>3～4 年級</small></button>
+      <button data-lv="3">🌳 大樹<br><small>5～6 年級</small></button>
+    </div>
+  </div>
+  <div class="field"><label>選擇你的角色</label>
+    <div class="avs"><button data-av="0" class="on"><canvas width="48" height="48"></canvas></button><button data-av="1"><canvas width="48" height="48"></canvas></button><button data-av="2"><canvas width="48" height="48"></canvas></button><button data-av="3"><canvas width="48" height="48"></canvas></button></div>
+  </div>
+  <div class="err" id="startErr"></div>
+  <div class="row"><button id="btnGo" style="font-size:20px;padding:12px 30px">出發！</button></div>
+  <div class="row" id="contRow"></div>
+</div>
+
+<!-- 遊戲主畫面 -->
+<div id="game" class="hidden">
+  <div id="hud"><div class="in">
+    <span class="who" id="hWho"></span>
+    <span class="chip" title="綠幣：可以兌換校園升級">💰 <span id="hCoin">0</span></span>
+    <span class="chip" title="總分">⭐ <span id="hScore">0</span> 分</span>
+    <div class="meter">
+      <div class="lab"><span>🏭 校園碳排指數</span><b id="hIdx">100</b></div>
+      <div class="bar"><div class="fill" id="hBar" style="width:100%"></div></div>
+    </div>
+    <div class="micons" id="mIcons"></div>
+    <div class="tools">
+      <button class="ghost" id="tUp" title="升級">🛠️<span class="tl"> 升級</span></button>
+      <button class="ghost" id="tAch" title="標章">🏅<span class="tl"> 標章</span></button>
+      <button class="ghost" id="tHid" title="隱藏任務">🎁<span class="tl"> 隱藏</span></button>
+      <button class="ghost" id="tBoard" title="排行榜">🏆<span class="tl"> 排行</span></button>
+      <button class="ghost" id="tHelp">❓</button>
+    </div>
+  </div></div>
+  <div class="wrap">
+    <div id="mapBox">
+      <canvas id="cv" width="800" height="576"></canvas>
+      <canvas id="mini" width="168" height="132"></canvas>
+      <div id="hint"></div>
+      <div id="pad">
+        <span></span><button data-k="up">▲</button><span></span>
+        <button data-k="left">◀</button><button class="act" id="padA">說話</button><button data-k="right">▶</button>
+        <span></span><button data-k="down">▼</button><span></span>
+      </div>
+    </div>
+    <div class="tip" id="tipBox"></div>
+  </div>
+</div>
+
+<div id="modal" class="hidden"><div id="mbox"><button id="mclose">✕</button><div id="mbody"></div></div></div>
+<div id="cert" class="hidden"></div>
+<div id="toast"></div>
+
+<script>
+/* =====================================================================
+   ★ 老師可修改區 ★
+   - SCHOOL_NAME：獎狀上的校名
+   - SCRIPT_URL：排行榜 Google Apps Script 網址（留空＝不使用排行榜）
+   - SPOTS：任務 NPC（tx、ty 是地圖格子座標，npc 是人物名字）
+   - Q：題庫。第一個選項是正確答案，遊戲會自動打亂順序。
+        lv 是適用的最低難度：1＝小樹苗、2＝小樹、3＝大樹
+   ===================================================================== */
+const SCHOOL_NAME = '我們的學校';
+const SCRIPT_URL = '';
+
+// 教學用排放係數（皆為概估值）
+const EF = {
+  elec: 0.474,     // 每度電約 0.474 公斤 CO2e（經濟部能源署公告 113 年度電力排碳係數）
+  tree: 12,        // 一棵成樹一年約吸收 12 公斤 CO2（教學常用概估）
+  panelDay: 1.3,   // 一片 400 瓦太陽能板在台灣一天約發 1.3 度電
+  water: 0.16      // 每度自來水（1 立方公尺）約 0.16 公斤 CO2e
+};
+
+// 任務依「校園標章」分組排列（上方任務圖示也照這個順序）
+const SPOTS = {
+  m1:{tx:8,  ty:4,  dir:'down',  npc:'林老師',   name:'安翠樓教室',   ic:'💡', title:'關電小偵探'},
+  m4:{tx:38, ty:15, dir:'down',  npc:'王工程師', name:'北邊光電球場', ic:'☀️', title:'太陽能工程師'},
+  m2:{tx:12, ty:16, dir:'down',  npc:'回收阿姨', name:'南耘樓回收站', ic:'♻️', title:'資源回收大挑戰'},
+  m6:{tx:40, ty:6,  dir:'down',  npc:'校工伯伯', name:'落葉回收區',   ic:'🍂', title:'落葉變黃金'},
+  m3:{tx:21, ty:34, dir:'up',    npc:'導護爸爸', name:'南大門',       ic:'🚲', title:'綠色上學路'},
+  m7:{tx:34, ty:6,  dir:'down',  npc:'營養師',   name:'廚房',         ic:'🥬', title:'午餐零浪費'},
+  m5:{tx:45, ty:13, dir:'down',  npc:'自然老師', name:'榕樹區',       ic:'🌳', title:'碳匯森林守護隊'},
+  m9:{tx:5,  ty:27, dir:'up',    npc:'生態老師', name:'校園菜圃',     ic:'🦋', title:'校園生態小偵探'},
+  m8:{tx:50, ty:24, dir:'left',  npc:'水資源志工',name:'溪畔步道',    ic:'💧', title:'節水小達人'},
+  m10:{tx:33,ty:30, dir:'right', npc:'總務主任', name:'南邊光電球場', ic:'🌧️', title:'雨水撲滿工程師'},
+  fin:{tx:15,ty:2,  dir:'right', npc:'校長',     name:'北門',         ic:'🏆', title:'淨零大會考'}
+};
+// 學校的五個校園標章：每個標章由 2 個任務組成，兩個都過關就能拿到
+const BADGES = [
+  {id:'power', ic:'💡', name:'節電校園標章',     ms:['m1','m4'],  d:'隨手關電、善用太陽能，聰明用電'},
+  {id:'cycle', ic:'♻️', name:'資源循環校園標章', ms:['m2','m6'],  d:'垃圾分類、落葉堆肥，讓資源一再利用'},
+  {id:'lowc',  ic:'🚲', name:'低碳生活校園標章', ms:['m3','m7'],  d:'綠色交通、低碳飲食，生活中處處減碳'},
+  {id:'green', ic:'🌳', name:'永續綠校園標章',   ms:['m5','m9'],  d:'守護大樹與校園生態，增加碳匯'},
+  {id:'water', ic:'💧', name:'水資源校園標章',   ms:['m8','m10'], d:'節約用水、收集雨水，珍惜每一滴水'}
+];
+const badgeOf = id => BADGES.find(b=>b.ms.includes(id));
+
+const Q = {
+  m1:[
+    {lv:1,q:'下課離開教室時，要怎麼做？',a:['隨手關燈、關電扇','讓燈開著比較亮','把冷氣開更冷','讓電腦一直開著'],exp:'人離開就關電，是最簡單的節電方法。'},
+    {lv:1,q:'冷氣溫度設定在幾度，比較省電又舒服？',a:['26～28 度','18 度','20 度','22 度'],exp:'政府建議冷氣設定在 26～28 度，再搭配電風扇。'},
+    {lv:2,q:'冷氣搭配什麼一起使用，可以更涼又省電？',a:['電風扇','暖爐','吹風機','烤箱'],exp:'電風扇讓冷空氣流動，溫度設高一點也很涼。'},
+    {lv:2,q:'冷氣溫度每調高 1 度，大約可以省多少電？',a:['約 6%','約 60%','完全不會省','約 100%'],exp:'冷氣每調高 1°C，大約可省 6% 的用電。'},
+    {lv:2,q:'電器不用的時候，怎麼做最省電？',a:['關掉並拔掉插頭或關閉開關','讓它一直待機','把螢幕調暗就好','開著等一下再用'],exp:'電器「待機」時還是會耗電，拔插頭或關掉延長線開關才不浪費。'},
+    {lv:3,q:'教室有 12 支 20 瓦的燈管，開 2 小時共用多少度電？（瓦 × 小時 ÷ 1000 ＝ 度）',a:['0.48 度','4.8 度','48 度','480 度'],exp:'12 × 20 ＝ 240 瓦；240 × 2 ÷ 1000 ＝ 0.48 度。'},
+    {lv:3,q:'台灣每用 1 度電，大約會排放多少公斤二氧化碳？',a:['約 0.47 公斤','約 4.7 公斤','約 47 公斤','0 公斤'],exp:'依 113 年度電力排碳係數，每度電約排放 0.474 公斤二氧化碳當量。'}
+  ],
+  m2:[
+    {lv:1,q:'喝完的寶特瓶，回收前要先怎麼做？',a:['倒空、簡單沖洗','裝滿沙子','丟進廚餘桶','直接丟一般垃圾'],exp:'倒空、沖洗、壓扁，回收工廠才能好好再利用。'},
+    {lv:1,q:'用過的衛生紙應該丟哪裡？',a:['一般垃圾','紙類回收','廚餘','塑膠類回收'],exp:'衛生紙纖維很短又沾了髒污，不能做成再生紙。'},
+    {lv:2,q:'垃圾處理的 3R 中，最優先要做到的是？',a:['減量：一開始就少製造垃圾','回收','焚化','掩埋'],exp:'順序是：減量（Reduce）→ 重複使用（Reuse）→ 回收（Recycle）。'},
+    {lv:2,q:'下列哪一個是「重複使用」？',a:['自備環保杯和餐具','使用免洗筷','買瓶裝水','塑膠袋用一次就丟'],exp:'環保杯、餐具可以用很多次，減少一次性垃圾。'},
+    {lv:3,q:'「循環經濟」的意思最接近哪一個？',a:['讓資源不斷再利用，盡量不產生廢棄物','把垃圾通通燒掉','一直買新東西','把垃圾埋到地下'],exp:'循環經濟從設計開始就考慮回收再利用，讓資源一直循環。'}
+  ],
+  m3:[
+    {lv:1,q:'住在學校附近，用什麼方式上學最環保？',a:['走路','請家長開車','搭計程車','騎機車'],exp:'走路不用燒油，零碳排又健康！'},
+    {lv:2,q:'住得比較遠時，哪一種上學方式比較低碳？',a:['搭公車或和同學共乘','每個人各開一台車','汽車在校門口怠速等很久','搭計程車繞路'],exp:'大眾運輸和共乘，平均每個人的碳排放少很多。'},
+    {lv:3,q:'家長在校門口等孩子放學時，怎麼做比較環保？',a:['熄火等待，不要怠速','一直開著冷氣怠速','按喇叭催促','停在紅線上'],exp:'怠速時引擎一直燒油卻沒有前進，熄火可以減少廢氣與碳排。'}
+  ],
+  m4:[
+    {lv:1,q:'太陽能板放在哪裡發電最多？',a:['陽光充足、沒有遮蔽的地方','樹蔭下','地下室','教室抽屜裡'],exp:'被樹或建築物遮住，發電量會大大減少。'},
+    {lv:1,q:'下列哪一個是「再生能源」？',a:['太陽能、風力','煤炭','石油','天然氣'],exp:'太陽、風、水力會不斷產生，用不完，也幾乎不排碳。'},
+    {lv:2,q:'太陽能發電屬於哪一種能源？',a:['再生能源','化石燃料','燃煤發電','燃油發電'],exp:'太陽能是取之不盡的再生能源。'},
+    {lv:3,q:'台灣在北半球，太陽能板通常朝向哪個方向發電比較多？',a:['朝南','朝北','朝下','任何方向都一樣'],exp:'北半球的太陽大多在南方天空，所以板子朝南、稍微傾斜最好。'},
+    {lv:3,q:'1 片太陽能板一天約發 1.3 度電，10 片一天約發多少度？',a:['13 度','1.3 度','130 度','0.13 度'],exp:'1.3 × 10 ＝ 13 度。'}
+  ],
+  m5:[
+    {lv:1,q:'植物行光合作用時，會吸收空氣中的什麼？',a:['二氧化碳','氧氣','氦氣','煙霧'],exp:'植物吸收二氧化碳，放出氧氣。'},
+    {lv:1,q:'保護校園的大樹，我們應該怎麼做？',a:['不攀折樹枝、不在樹幹刻字','把樹皮剝下來玩','把垃圾丟在樹下','在樹根上跳來跳去'],exp:'樹皮和樹根受傷，樹就會生病。'},
+    {lv:2,q:'樹木把碳存放在樹幹和樹根裡，這叫做什麼？',a:['碳匯','碳排放','碳中毒','碳酸飲料'],exp:'森林、海洋、土壤能把碳存起來，叫做「碳匯」。'},
+    {lv:2,q:'校園大樹可以幫我們什麼忙？',a:['遮蔭降溫、吸收二氧化碳','增加噪音','讓空氣變髒','讓教室更熱'],exp:'大樹讓校園變涼，就能少開冷氣，一舉兩得。'},
+    {lv:3,q:'一棵大樹一年約吸收 12 公斤二氧化碳，要吸收 120 公斤需要幾棵？',a:['10 棵','12 棵','100 棵','1 棵'],exp:'120 ÷ 12 ＝ 10 棵。'}
+  ],
+  m6:[
+    {lv:1,q:'落葉做成堆肥後，可以變成什麼？',a:['植物的肥料','塑膠','石頭','汽油'],exp:'微生物把落葉分解成腐植質，讓土壤變肥沃。'},
+    {lv:2,q:'堆肥要怎麼照顧，微生物才能好好工作？',a:['保持適當水分，並偶爾翻堆讓空氣進去','完全密封不通風','倒入清潔劑','整堆泡在水裡'],exp:'微生物需要水和空氣；太乾、太濕或不通風都會失敗。'},
+    {lv:2,q:'乾的落葉和濕的菜葉，堆肥時最好怎麼放？',a:['一層一層混合','只放菜葉','只放落葉','用塑膠袋隔開'],exp:'乾（褐色）和濕（綠色）材料混合，分解得最好，也不容易發臭。'},
+    {lv:3,q:'落葉做成堆肥，而不是當垃圾燒掉，有什麼好處？',a:['減少運送和焚化的碳排，養分回到土壤','讓垃圾變多','增加空氣污染','沒有好處'],exp:'這就是「循環經濟」：廢棄物變資源，回到大自然。'}
+  ],
+  m7:[
+    {lv:1,q:'營養午餐吃不完，怎麼做最好？',a:['依自己的食量盛裝，吃多少拿多少','全部倒掉','偷偷藏起來','拿很多再丟掉'],exp:'剩食丟掉，生產、運送、煮它的能源都浪費了。'},
+    {lv:2,q:'「食物里程」是指什麼？',a:['食物從產地送到餐桌的距離','吃飯時走路的距離','一餐的價錢','食物的重量'],exp:'食物里程越短，運輸排放的二氧化碳越少。'},
+    {lv:2,q:'吃「當季」食材為什麼比較低碳？',a:['不需要溫室加溫或長時間冷藏','比較貴','比較好看','比較重'],exp:'不是當季的蔬果，常需要額外能源栽種、冷藏或遠距運送。'},
+    {lv:3,q:'一般來說，生產哪一種食物排放的溫室氣體最多？',a:['牛肉','蔬菜','豆類','米飯'],exp:'牛會打嗝排放甲烷，還需要大量飼料和土地，碳足跡很高。'}
+  ],
+  m8:[
+    {lv:1,q:'刷牙時怎麼做最省水？',a:['用漱口杯裝水','水龍頭一直開著','裝滿一整桶水','邊刷邊沖'],exp:'一杯水就夠了，不要讓水一直流。'},
+    {lv:1,q:'洗手抹肥皂的時候，水龍頭應該？',a:['先關起來','一直開著','開到最大','開開關關地玩'],exp:'抹肥皂時關水，可以省下不少水。'},
+    {lv:2,q:'收集來的雨水，適合拿來做什麼？',a:['澆花、沖廁所、拖地','直接喝','煮湯','泡牛奶'],exp:'雨水沒有經過淨化，不能喝，但很適合澆花和清潔。'},
+    {lv:2,q:'發現水龍頭漏水，應該怎麼做？',a:['馬上告訴老師或總務處','不用管它','把它開更大','用膠帶黏住就好'],exp:'一個漏水的水龍頭，一天可能浪費好幾桶水。'},
+    {lv:3,q:'為什麼省水也能減碳？',a:['淨水廠處理和抽水送水都要用電','水是用石油做的','水會直接排放二氧化碳','省水和減碳無關'],exp:'自來水從處理到送到學校，每一步都需要電力。'}
+  ],
+  m9:[ // 永續綠校園：校園生態
+    {lv:1,q:'校園裡的蝴蝶和蜜蜂，最喜歡什麼？',a:['會開花的原生植物','塑膠花','水泥地','噴了殺蟲劑的花'],exp:'開花植物提供花蜜，蝴蝶、蜜蜂就會來校園安家。'},
+    {lv:1,q:'菜圃的菜長蟲了，怎麼做比較友善環境？',a:['用手抓蟲，或種會驅蟲的植物','噴很多農藥','把菜全部拔掉','放火燒掉'],exp:'農藥會傷害土壤、蜜蜂和其他小動物。'},
+    {lv:2,q:'「生物多樣性」是什麼意思？',a:['很多不同種類的生物一起生活','只有一種生物','生物越少越好','只有動物、沒有植物'],exp:'生物種類越多，生態系統越健康、越穩定。'},
+    {lv:2,q:'為什麼校園要多種「原生植物」？',a:['適應本地氣候好照顧，還能提供本土動物食物和家','因為比較貴','長得最快的外來種最好','原生植物會破壞環境'],exp:'原生植物和本土的鳥、蝶、昆蟲一起演化，是牠們重要的食物和棲地。'},
+    {lv:3,q:'「透水鋪面」對校園有什麼好處？',a:['讓雨水滲進土裡，減少淹水、涵養地下水','讓地面更熱','讓雨水全部流進水溝','讓植物長不出來'],exp:'透水鋪面像海綿，能留住雨水，也讓地面比較不會發燙。'},
+    {lv:3,q:'屋頂種植物的「綠屋頂」有什麼好處？',a:['隔熱降溫、減少冷氣用電，還增加綠地','讓屋頂漏水','增加噪音','讓教室更熱'],exp:'植物和土壤能擋住陽光的熱，夏天教室更涼，冷氣也能少開。'}
+  ],
+  m10:[ // 水資源校園：雨水回收
+    {lv:1,q:'下大雨時，學校可以怎麼把雨水留下來用？',a:['用「雨水撲滿」（儲水桶）接屋頂流下來的雨水','把雨水掃進水溝','用手接','不用管它'],exp:'屋頂面積大，接下來的雨水可以拿來澆花、沖廁所。'},
+    {lv:1,q:'地球上的水，大部分是哪一種？',a:['海水（鹹水）','可以直接喝的淡水','冰塊','礦泉水'],exp:'淡水只佔地球的水大約 3%，我們能用的更少，所以要珍惜。'},
+    {lv:2,q:'台灣雨量很多，為什麼還是可能缺水？',a:['雨下得很集中、山又陡，雨水很快就流進大海','雨水都被喝光了','台灣很少下雨','水庫太大了'],exp:'台灣的雨大多集中在梅雨和颱風季節，留住雨水很重要。'},
+    {lv:2,q:'買水龍頭、馬桶時，看到什麼標章表示比較省水？',a:['省水標章','價格標籤','進口標籤','防水標章'],exp:'有省水標章的設備，用同樣的方式卻能少用很多水。'},
+    {lv:3,q:'屋頂面積 100 平方公尺，下了 20 毫米的雨，大約可以收集多少公升雨水？（1 平方公尺 × 1 毫米＝1 公升）',a:['2000 公升','200 公升','20 公升','20000 公升'],exp:'100 × 20 ＝ 2000 公升，大約是 10 個大浴缸的水！'},
+    {lv:3,q:'用收集來的 1000 公升雨水沖馬桶，可以少用多少度自來水？',a:['1 度','10 度','100 度','0.1 度'],exp:'1 度水＝1000 公升，所以可以省下 1 度自來水，也少了淨水和送水的用電。'}
+  ],
+  fin:[
+    {lv:1,q:'地球暖化，主要是因為空氣中哪一種氣體變多？',a:['二氧化碳等溫室氣體','氧氣','氮氣','花的香味'],exp:'燃燒煤、石油會排放二氧化碳，讓地球像蓋了厚棉被一樣變熱。'},
+    {lv:1,q:'下列哪一個是減碳的好習慣？',a:['自備水壺、隨手關燈','每天買瓶裝水','冷氣開 18 度','用完的紙只寫一面就丟'],exp:'生活中的小行動，累積起來就是大力量。'},
+    {lv:2,q:'「淨零排放」的意思是？',a:['先盡量減少排放，剩下的用碳匯抵銷，總和為零','完全不使用任何東西','只要種樹就好','把二氧化碳藏起來'],exp:'淨零＝排放量 − 吸收量 ＝ 0。'},
+    {lv:2,q:'台灣的目標是在哪一年達成淨零排放？',a:['2050 年','2025 年','2100 年','3000 年'],exp:'台灣在 2022 年公布「2050 淨零排放路徑」。'},
+    {lv:3,q:'要達成淨零，最優先應該做的是？',a:['先減少排放，再用碳匯抵銷剩下的部分','只靠種樹抵銷','繼續排放不管它','多買電器'],exp:'光靠種樹不夠，一定要先從源頭減量。'}
+  ]
+};
+/* ===================== 老師可修改區結束 ===================== */
+
+const $ = s => document.querySelector(s);
+const MIDS = Object.keys(SPOTS).filter(k=>k!=='fin');   // 10 個熱點任務
+const NM = MIDS.length;
+const SAVE_KEY = 'netzero_campus_v1';
+let S = null;            // 存檔
+let tickT = null;
+const LVNAME = {1:'🌱 小樹苗',2:'🌿 小樹',3:'🌳 大樹'};
+
+const UPGRADES = [
+  {id:'solar', e:'☀️', name:'廚房屋頂太陽能板', cost:30, cut:10, max:1, at:[[63,26]], d:'學光電球場，在廚房屋頂也裝太陽能板發電！'},
+  {id:'led',   e:'💡', name:'LED 燈＋智慧電表', cost:25, cut:8, max:1, at:[[14,24]], d:'LED 比傳統燈管省電，電表隨時提醒用電量。'},
+  {id:'bike',  e:'🚲', name:'腳踏車停車區', cost:20, cut:5, max:1, at:[[46,70]], d:'鼓勵走路、騎車上學，減少汽車接送。'},
+  {id:'rain',  e:'☔', name:'雨水回收桶', cost:15, cut:4, max:1, at:[[77,80]], d:'收集雨水澆花、沖廁所，省水又省電。'},
+  {id:'comp',  e:'♻️', name:'落葉堆肥箱', cost:15, cut:3, max:1, at:[[74,14]], d:'落葉、菜葉變肥料，減少垃圾焚化。'},
+  {id:'tree',  e:'🌳', name:'種一棵原生樹', cost:10, cut:3, max:4, at:[[56,82],[76,67],[13,48],[24,52]], d:'增加校園碳匯，夏天還能遮蔭降溫。'}
+];
+const ACHS = [
+  {id:'first', e:'🎉', name:'淨零新手', d:'完成第一個任務'},
+  {id:'all',   e:'🗺️', name:'校園走透透', d:'10 個熱點任務全部完成'},
+  {id:'three', e:'🌟', name:'完美小隊長', d:'10 個任務全部 3 顆星'},
+  {id:'badges',e:'🏫', name:'五標章學校', d:'拿到全部 5 枚校園標章'},
+  {id:'forest',e:'🌲', name:'種樹達人', d:'種滿 4 棵樹'},
+  {id:'build', e:'🏗️', name:'綠校園建築師', d:'所有升級都完成'},
+  {id:'zero',  e:'🌏', name:'淨零達成', d:'校園碳排指數降到 0'},
+  {id:'final', e:'🎓', name:'淨零博士', d:'通過淨零大會考'}
+];
+
+/* ---------------- 工具 ---------------- */
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]];} return a; }
+function esc(s){ return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('show'); clearTimeout(el._t); el._t=setTimeout(()=>el.classList.remove('show'),2600); }
+function r1(n){ return Math.round(n*10)/10; }
+function fmtTime(s){ s=Math.round(s||0); const m=Math.floor(s/60); return m+' 分 '+(s%60)+' 秒'; }
+let AC=null;
+function beep(ok){
+  try{
+    AC = AC || new (window.AudioContext||window.webkitAudioContext)();
+    const o=AC.createOscillator(), g=AC.createGain(); o.connect(g); g.connect(AC.destination);
+    const t=AC.currentTime; o.type='triangle';
+    if(ok){ o.frequency.setValueAtTime(660,t); o.frequency.setValueAtTime(880,t+.1); } else { o.frequency.setValueAtTime(220,t); o.frequency.setValueAtTime(170,t+.12); }
+    g.gain.setValueAtTime(.12,t); g.gain.exponentialRampToValueAtTime(.001,t+.3); o.start(t); o.stop(t+.32);
+  }catch(e){}
+}
+
+/* ---------------- 存檔 ---------------- */
+function load(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch(e){ return null; } }
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function newSid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
+
+/* ---------------- 計分 ---------------- */
+function missionPts(){ return MIDS.reduce((s,m)=>s+((S.best[m]&&S.best[m].pts)||0),0); }
+function finalPts(){ return (S.best.fin&&S.best.fin.pts)||0; }
+function totalScore(){ return missionPts()+finalPts()+hqDoneCount()*20; }   // 隱藏任務每個 20 分
+function doneCount(){ return MIDS.filter(m=>S.best[m]&&S.best[m].stars>0).length; }
+function hasBadge(bd){ return bd.ms.every(m=>S.best[m]&&S.best[m].stars>0); }
+function badgeCount(){ return BADGES.filter(hasBadge).length; }
+function upCount(id){ return S.up[id]||0; }
+function carbonIdx(){
+  let v=100;
+  MIDS.forEach(m=>{ if(S.best[m]) v-=S.best[m].stars*2; });
+  v -= Math.round(finalPts()/20);
+  UPGRADES.forEach(u=>{ v-=u.cut*upCount(u.id); });
+  return Math.max(0,v);
+}
+function starsOf(r){ return r>=0.9?3 : r>=0.6?2 : r>=0.4?1 : 0; }
+
+/* ---------------- 開始畫面 ---------------- */
+let pickLv = 0, pickAv = 0;
+document.querySelectorAll('.avs button').forEach(b=>b.onclick=()=>{ pickAv=+b.dataset.av; document.querySelectorAll('.avs button').forEach(x=>x.classList.toggle('on',x===b)); });
+document.querySelectorAll('.lvbtns button').forEach(b=>b.onclick=()=>{ pickLv=+b.dataset.lv; document.querySelectorAll('.lvbtns button').forEach(x=>x.classList.toggle('on',x===b)); });
+$('#inCls').addEventListener('input',e=>{
+  const v=e.target.value.replace(/\D/g,''); e.target.value=v;
+  if(v.length>=3){ const g=+v.slice(0,v.length-2); const lv=g<=2?1:g<=4?2:3; if(g>=1&&g<=6){ pickLv=lv; document.querySelectorAll('.lvbtns button').forEach(x=>x.classList.toggle('on',+x.dataset.lv===lv)); } }
+});
+(function initStart(){
+  const old=load();
+  if(old && old.name){
+    $('#inCls').value=old.cls; $('#inName').value=old.name; pickLv=old.lv;
+    document.querySelectorAll('.lvbtns button').forEach(x=>x.classList.toggle('on',+x.dataset.lv===old.lv));
+    $('#contRow').innerHTML=`<div style="width:100%;color:#5a6d60">這台裝置有「${esc(old.cls)} ${esc(old.name)}」的遊戲紀錄（${old.lvLabel||LVNAME[old.lv]}，${(function(){S=old;const t=totalScore();S=null;return t;})()} 分）</div><button class="ghost" id="btnCont">繼續上次的遊戲</button>`;
+    $('#btnCont').onclick=()=>{ S=old; enterGame(); };
+  }
+})();
+$('#btnGo').onclick=()=>{
+  const cls=$('#inCls').value.trim(), name=$('#inName').value.trim();
+  if(!/^\d{3,4}$/.test(cls)) return $('#startErr').textContent='請輸入三或四位數的班級，例如 501';
+  if(!name) return $('#startErr').textContent='請輸入暱稱';
+  if(!pickLv) return $('#startErr').textContent='請選擇挑戰難度';
+  const old=load();
+  if(old && old.name && !confirm('開始新遊戲會覆蓋這台裝置上的舊紀錄，確定嗎？')) return;
+  S={cls,name,lv:pickLv,av:pickAv,sid:newSid(),best:{},coins:0,up:{},ach:[],t:0,zeroShown:false};
+  save(); enterGame(true);
+};
+
+function enterGame(isNew){
+  $('#start').classList.add('hidden'); $('#game').classList.remove('hidden');
+  clearInterval(tickT); tickT=setInterval(()=>{ if(!document.hidden){ S.t+=5; save(); } },5000);
+  setPlayerLook();
+  renderAll();
+  setTimeout(()=>$('#mapBox').scrollIntoView({block:'nearest'}),50);
+  if(isNew) showHelp(true);
+}
+
+/* ---------------- 地圖與 HUD ---------------- */
+function renderAll(){
+  $('#hWho').textContent=`${S.cls} ${S.name}・${LVNAME[S.lv]}`;
+  $('#hCoin').textContent=S.coins;
+  $('#hScore').textContent=totalScore();
+  const idx=carbonIdx();
+  $('#hIdx').textContent=idx===0?'0 🎉 淨零！':idx;
+  $('#hBar').style.width=idx+'%';
+  const finOpen = doneCount()===NM;
+  // 任務清單
+  // 任務圖示（HUD）：完成的變彩色＋星星，點一下主角會走過去
+  // 依校園標章分組：每組 2 個任務，拿到標章的那組會變金色
+  const L=$('#mIcons'); L.innerHTML='';
+  const mkIcon=id=>{ const p=SPOTS[id], b=S.best[id], lock=id==='fin'&&!finOpen, done=b&&b.stars, bd=badgeOf(id);
+    const c=document.createElement('button'); c.className='mi'+(done?' done':'')+(lock?' lock':'');
+    c.title=`${p.title}｜${p.name}・${p.npc}${bd?'｜'+bd.name:''}｜${lock?'完成 '+NM+' 個任務後開啟':done?'⭐'.repeat(b.stars)+' '+b.pts+' 分':'尚未完成'}`;
+    c.innerHTML=`<span>${lock?'🔒':p.ic}</span>${done?`<i>${b.stars}</i>`:''}`;
+    c.onclick=()=>{ const n=NPCS.find(x=>x.mission===id); $('#mapBox').scrollIntoView({behavior:'smooth',block:'nearest'}); walkToNpc(n); };
+    return c; };
+  BADGES.forEach(bd=>{ const g=document.createElement('span'); g.className='bgrp'+(hasBadge(bd)?' got':''); g.title=bd.name+(hasBadge(bd)?'（已取得）':'');
+    g.innerHTML=`<em>${hasBadge(bd)?'🏅':''}</em>`; bd.ms.forEach(id=>g.appendChild(mkIcon(id))); L.appendChild(g); });
+  L.appendChild(mkIcon('fin'));
+  const n=doneCount();
+  $('#tipBox').innerHTML = n===0 ? '🚶 用 <b>方向鍵／WASD</b> 在校園裡走動（平板用右下角方向鍵，或直接點地圖），找到頭上有 <b>❗</b> 的人，按 <b>空白鍵</b>和他說話就能開始任務！完成任務可以拿到 💰 綠幣，用來升級校園。點上方的任務圖示，主角也會自己走過去。'
+    : n<NM ? `已完成 <b>${n}</b> / ${NM} 個熱點、<b>${badgeCount()}</b> / 5 枚校園標章。完成全部熱點後，北門的「淨零大會考」就會開啟！別忘了用 💰 綠幣到「🛠️ 升級」改造校園喔。`
+    : idx>0 ? `熱點都完成了！挑戰北門的「淨零大會考」，再用 💰 綠幣升級校園，把碳排指數降到 0！（重玩任務拿到更高分也能再賺綠幣）`
+    : '🌏 恭喜！校園達成淨零！可以重玩任務挑戰三顆星，或到排行榜看看名次。';
+  checkAch();
+}
+
+/* ---------------- 視窗 ---------------- */
+let onClose=null;
+function openModal(html){ $('#mbody').innerHTML=html; $('#modal').classList.remove('hidden'); $('#modal').scrollTop=0; }
+function closeModal(){ $('#modal').classList.add('hidden'); clearInterval(gameTimer); if(onClose){ const f=onClose; onClose=null; f(); } }
+$('#mclose').onclick=()=>{ if(curRun && !curRun.finished && !confirm('任務還沒完成，確定要離開嗎？（這次的進度不會保存）')) return; curRun=null; closeModal(); };
+
+/* ---------------- 任務流程 ---------------- */
+let curRun=null, gameTimer=null;
+const INTRO = {
+  m1:'全班要去操場上體育課了，可是安翠樓的教室裡，電器還開著！快當「關電小偵探」把電省下來。',
+  m2:'南耘樓的回收站堆滿了垃圾，大家都丟錯桶了！分類正確，資源才能重新利用。',
+  m3:'早上的南大門擠滿了接送的汽車，排出好多廢氣。幫同學們規劃最低碳的上學方式吧！',
+  m4:'這是我們的光電球場！屋頂的太陽能板會發電，下面還能遮陽擋雨打球。學校想在別的屋頂也裝太陽能板，請你當工程師，找出照得到最多陽光的位置。',
+  m5:'榕樹區的大樹是校園的「碳匯」，會把二氧化碳存起來。一起來守護它們！',
+  m6:'秋天到了，落葉回收區堆滿了落葉。落葉不是垃圾，它可以變成黃金肥料！',
+  m7:'廚房正在準備今天的營養午餐，還用了校園菜圃種的蔬菜喔！吃得低碳、不浪費，也是減碳的好方法。',
+  m8:'溪畔步道旁的水龍頭一直在漏水……省水也能減碳，快來當節水小達人！',
+  m9:'校園菜圃和花圃裡住了好多小生物：蝴蝶、蜜蜂、瓢蟲、蚯蚓……一起來當生態小偵探，讓校園更有生命力！',
+  m10:'光電球場的屋頂好大一片，下雨時可以接好多雨水！學校想做「雨水撲滿」，請你幫忙想想雨水可以怎麼用。',
+  fin:'所有熱點都改善了！最後通過淨零大會考，證明你是真正的淨零小隊長！'
+};
+function pickQ(pool,n){
+  const ok=pool.filter(q=>q.lv<=S.lv);
+  const same=shuffle(ok.filter(q=>q.lv===S.lv)), other=shuffle(ok.filter(q=>q.lv!==S.lv));
+  return same.concat(other).slice(0,n);
+}
+function buildSteps(id){
+  const L=S.lv, nq = L===1?2:3;
+  switch(id){
+    case 'm1': return [stepToggle(), ...qSteps(pickQ(Q.m1,nq))];
+    case 'm2': return [stepSort(), ...qSteps(pickQ(Q.m2,2))];
+    case 'm3': return [stepTransport(), ...qSteps(pickQ(Q.m3,L===1?1:2))];
+    case 'm4': return [stepSolar(), ...qSteps(pickQ(Q.m4,nq))];
+    case 'm5': return [stepPick('tree'), ...qSteps(pickQ(Q.m5,nq))];
+    case 'm6': return [stepPick('comp'), ...qSteps(pickQ(Q.m6,nq))];
+    case 'm7': return [...qSteps(pickPairs(L===1?3:4),true), ...qSteps(pickQ(Q.m7,L===1?1:2))];
+    case 'm8': return [stepPick('water'), ...qSteps(pickQ(Q.m8,nq))];
+    case 'm9': return [stepPick('eco'), ...qSteps(pickQ(Q.m9,nq))];
+    case 'm10': return [stepPick('rain'), ...qSteps(pickQ(Q.m10,nq))];
+    case 'fin': {
+      let all=[]; Object.keys(Q).forEach(k=>all=all.concat(Q[k].map(q=>Object.assign({},q))));
+      return qSteps(pickQ(all,10));
+    }
+  }
+}
+function openMission(id){
+  if(id==='fin' && doneCount()<NM){ toast('🔒 先完成 '+NM+' 個熱點任務、拿到 5 枚校園標章，才能挑戰淨零大會考喔！'); return; }
+  const p=SPOTS[id], b=S.best[id];
+  openModal(`<div class="mhead"><span class="big">${p.ic}</span><div><h2>${p.title}</h2><div>📍 ${p.name}</div></div></div>
+    <div class="story" style="margin-top:12px"><b>${p.npc}：</b>「${INTRO[id]}」</div>
+    ${badgeOf(id)?`<p style="text-align:center;margin:10px 0 0">🏅 這是「<b>${badgeOf(id).name}</b>」的任務（${badgeOf(id).ms.map(m=>SPOTS[m].title).join('＋')}）</p>`:''}
+    ${b?`<p style="text-align:center">目前最佳：${'⭐'.repeat(b.stars)||'—'}　${b.pts} 分</p>`:''}
+    <div class="row"><button id="goM" style="font-size:20px">${b?'再挑戰一次':'開始任務'}</button></div>`);
+  $('#goM').onclick=()=>{
+    curRun={id, steps:buildSteps(id), i:0, got:0, total:0, finished:false, facts:[]};
+    nextStep();
+  };
+}
+function nextStep(){
+  const R=curRun; if(!R) return;
+  if(R.i>=R.steps.length) return finishMission();
+  const st=R.steps[R.i];
+  const pct=Math.round(R.i/R.steps.length*100);
+  $('#mbody').innerHTML=`<div class="mhead"><span class="big">${SPOTS[R.id].ic}</span><h3>${SPOTS[R.id].title}</h3></div><div class="prog"><div style="width:${pct}%"></div></div><div id="stepBox"></div>`;
+  $('#modal').scrollTop=0;
+  st($('#stepBox'), (got,total,fact)=>{ R.got+=got; R.total+=total; if(fact) R.facts.push(fact); R.i++; });
+}
+function contBtn(box,label){
+  const row=document.createElement('div'); row.className='row';
+  const b=document.createElement('button'); b.textContent=label||'下一步 ➜'; b.onclick=nextStep; row.appendChild(b); box.appendChild(row);
+  b.focus();
+}
+
+/* 選擇題 */
+function qSteps(list,isPair){
+  return list.map(q=>(box,done)=>{
+    const opts=shuffle(q.a.map((t,i)=>({t,ok:i===0})));
+    box.innerHTML=`<div class="q">${isPair?'🥗 ':'❓ '}${esc(q.q)}</div><div class="opts"></div>`;
+    const O=box.querySelector('.opts');
+    opts.forEach((o,k)=>{
+      const b=document.createElement('button'); b.innerHTML=`<b>${k+1}.</b> ${esc(o.t)}`;
+      b.onclick=()=>{
+        O.querySelectorAll('button').forEach((x,j)=>{ x.disabled=true; x.style.opacity=1; if(opts[j].ok) x.classList.add('ok'); });
+        if(!o.ok) b.classList.add('no');
+        beep(o.ok);
+        const e=document.createElement('div'); e.className='exp'; e.innerHTML=(o.ok?'✅ 答對了！':'❌ 答錯了，正確答案已標示。')+'<br>💡 '+esc(q.exp); box.appendChild(e);
+        done(o.ok?1:0,1); contBtn(box);
+      };
+      O.appendChild(b);
+    });
+  });
+}
+const PAIRS=[
+  {q:'午餐的蔬菜，哪一個比較低碳？',a:['校園菜圃或在地的當季蔬菜','從國外空運來的蔬菜'],exp:'在地當季，食物里程短、不用長途冷藏運送。'},
+  {q:'哪一種蛋白質來源碳足跡比較低？',a:['豆腐、豆漿等豆製品','牛肉'],exp:'生產豆類的溫室氣體排放比牛肉少非常多。'},
+  {q:'喝水，哪一個比較低碳？',a:['自備水壺裝飲水機的水','每天買一瓶瓶裝水'],exp:'瓶裝水要製造塑膠瓶、長途運送，還會產生垃圾。'},
+  {q:'夏天想吃水果，哪一個比較低碳？',a:['台灣當季的西瓜、芒果','冬天才產、需要長期冷藏的進口水果'],exp:'當季水果不用溫室加溫或長時間冷藏。'},
+  {q:'午餐盛飯時，哪一個做法比較好？',a:['先盛少一點，不夠再添','一次盛滿滿，吃不完就倒掉'],exp:'剩食在掩埋、處理時也會產生溫室氣體。'},
+  {q:'點心時間，哪一個包裝比較環保？',a:['用自己的餐盒裝','每片餅乾都單獨塑膠包裝'],exp:'過度包裝會製造很多一次性垃圾。'}
+];
+function pickPairs(n){ return shuffle(PAIRS).slice(0,n).map(p=>Object.assign({lv:1},p)); }
+
+/* 小遊戲 1：關電小偵探 */
+function stepToggle(){
+  return (box,done)=>{
+    const L=S.lv;
+    let devs=[
+      {e:'💡',n:'前排電燈',need:false},{e:'💡',n:'後排電燈',need:false},{e:'🌀',n:'電風扇',need:false},
+      {e:'❄️',n:'冷氣',need:false},{e:'💻',n:'電腦',need:false},{e:'📽️',n:'投影機',need:false}
+    ];
+    if(L>=2) devs.push({e:'🔌',n:'平板充電車（已充飽）',need:false},{e:'🐟',n:'魚缸打氣機',need:true});
+    if(L>=3) devs.push({e:'💡',n:'走廊電燈',need:false},{e:'🌀',n:'吊扇',need:false});
+    devs=shuffle(devs).map(d=>Object.assign(d,{on:true}));
+    let left = L===1?30:L===2?25:22, ended=false;
+    box.innerHTML=`<div class="story">🏃 全班要去操場上體育課，教室 40 分鐘沒有人！點一下電器可以開／關，<b>把不需要的關掉</b>${L>=2?'（但有一樣東西不能關喔！）':''}。</div>
+      <p style="text-align:center">剩下 <span class="timer" id="tLeft">${left}</span> 秒</p><div class="devs"></div><div class="row"><button id="tOk">檢查完畢 ✔</button></div>`;
+    const D=box.querySelector('.devs');
+    devs.forEach(d=>{
+      const b=document.createElement('button'); b.className='dev';
+      const draw=()=>{ b.classList.toggle('off',!d.on); b.innerHTML=`<span class="e">${d.e}</span>${d.n}<br><span class="s">${d.on?'🟢 開著':'⚫ 關閉'}</span>`; };
+      b.onclick=()=>{ if(ended) return; d.on=!d.on; draw(); }; draw(); D.appendChild(b);
+    });
+    const end=()=>{
+      if(ended) return; ended=true; clearInterval(gameTimer);
+      const ok=devs.filter(d=>d.on===d.need).length;
+      const fish=devs.find(d=>d.need);
+      D.querySelectorAll('.dev').forEach((b,i)=>{ b.style.outline = devs[i].on===devs[i].need ? '3px solid #2f9e57':'3px solid #e2574c'; });
+      box.querySelector('#tOk').remove();
+      // 燈 0.48kW＋電扇 0.12＋冷氣 1.5＋電腦 0.15＋投影機 0.25 ≈ 2.5kW，40 分鐘
+      const kwh = r1(2.5*40/60);
+      let msg=`<div class="exp">${ok===devs.length?'🎉 全部正確！':'有 '+(devs.length-ok)+' 個沒處理好（紅框）。'}<br>`;
+      if(fish) msg+= fish.on?'🐟 魚缸打氣機不能關，魚需要氧氣，你做得很好！<br>':'🐟 糟糕！魚缸打氣機關掉，魚會缺氧！節電也要注意安全和生命喔。<br>';
+      msg+= L>=2?`💡 像這樣下課隨手關電，一間教室 40 分鐘大約可省 ${kwh} 度電；全校 30 間教室一起做，就是約 ${r1(kwh*30)} 度電，少排放約 ${r1(kwh*30*EF.elec)} 公斤二氧化碳！`:'💡 人離開就關電，是最簡單的減碳方法！';
+      box.insertAdjacentHTML('beforeend',msg+'</div>');
+      beep(ok===devs.length);
+      done(Math.round(ok/devs.length*5),5); contBtn(box);
+    };
+    box.querySelector('#tOk').onclick=end;
+    clearInterval(gameTimer);
+    gameTimer=setInterval(()=>{ left--; const t=box.querySelector('#tLeft'); if(t) t.textContent=left; if(left<=0) end(); },1000);
+  };
+}
+
+/* 小遊戲 2：資源回收 */
+const BINS=[
+  {id:'paper',e:'📄',n:'紙類'},{id:'plastic',e:'🧴',n:'塑膠類'},{id:'metal',e:'🥫',n:'鐵鋁罐'},
+  {id:'glass',e:'🍾',n:'玻璃類'},{id:'food',e:'🍎',n:'廚餘'},{id:'trash',e:'🗑️',n:'一般垃圾'}
+];
+const TRASH=[
+  {e:'📝',n:'舊考卷',b:'paper'},{e:'📦',n:'紙箱（壓扁）',b:'paper'},{e:'🍶',n:'寶特瓶（已倒空）',b:'plastic'},
+  {e:'🥤',n:'洗乾淨的塑膠杯',b:'plastic'},{e:'🥫',n:'鋁罐',b:'metal'},{e:'🥫',n:'鐵罐頭（洗淨）',b:'metal'},
+  {e:'🍾',n:'玻璃瓶',b:'glass'},{e:'🍌',n:'香蕉皮',b:'food'},{e:'🍚',n:'吃剩的飯菜',b:'food'},
+  {e:'🧻',n:'用過的衛生紙',b:'trash'},{e:'🍬',n:'嚼過的口香糖',b:'trash'},{e:'🖊️',n:'壞掉的原子筆',b:'trash'}
+];
+function stepSort(){
+  return (box,done)=>{
+    const n = S.lv===1?6:S.lv===2?9:12;
+    // 每個桶子至少一件
+    let pool=shuffle(TRASH), list=[];
+    BINS.forEach(b=>{ const i=pool.findIndex(t=>t.b===b.id); list.push(pool.splice(i,1)[0]); });
+    list=shuffle(list.concat(pool.slice(0,n-6)));
+    let sel=null, ok=0, cnt=0;
+    box.innerHTML=`<div class="story">先點一個垃圾，再點它應該去的桶子。</div><div class="items"></div><div class="bins"></div><div id="sFb" class="exp" style="display:none"></div>`;
+    const I=box.querySelector('.items'), B=box.querySelector('.bins'), F=box.querySelector('#sFb');
+    list.forEach(t=>{
+      const b=document.createElement('button'); b.className='item'; b.textContent=t.e+' '+t.n;
+      b.onclick=()=>{ I.querySelectorAll('.item').forEach(x=>x.classList.remove('sel')); b.classList.add('sel'); sel={t,b}; };
+      I.appendChild(b);
+    });
+    BINS.forEach(bn=>{
+      const d=document.createElement('button'); d.className='bin'; d.innerHTML=`<span class="e">${bn.e}</span>${bn.n}<div class="n">0</div>`; d._c=0;
+      d.onclick=()=>{
+        if(!sel){ toast('先點一個垃圾喔！'); return; }
+        const right = sel.t.b===bn.id; cnt++; if(right) ok++;
+        beep(right);
+        const rb=BINS.find(x=>x.id===sel.t.b);
+        F.style.display='block';
+        F.innerHTML = right ? `✅ ${sel.t.n} → ${bn.n}，正確！` : `❌ ${sel.t.n} 應該丟到「${rb.n}」才對。`;
+        sel.b.remove(); sel=null; d._c++; d.querySelector('.n').textContent=d._c;
+        if(cnt===list.length){
+          F.innerHTML += `<br>🎯 分類正確 ${ok} / ${list.length} 件。<br>💡 資源回收再製，比從原料重新製造省下很多能源，也能減少焚化垃圾產生的二氧化碳。`;
+          done(Math.round(ok/list.length*5),5); contBtn(box);
+        }
+      };
+      B.appendChild(d);
+    });
+  };
+}
+
+/* 小遊戲 3：綠色上學路 */
+const MODES=[
+  {id:'walk',e:'🚶',n:'走路',f:0},{id:'bike',e:'🚲',n:'腳踏車',f:0},{id:'bus',e:'🚌',n:'公車',f:0.04},
+  {id:'pool',e:'🚗👫',n:'汽車共乘',f:0.06},{id:'moto',e:'🛵',n:'機車載',f:0.05},{id:'car',e:'🚗',n:'汽車單獨接送',f:0.17}
+];
+function stepTransport(){
+  return (box,done)=>{
+    const L=S.lv;
+    let stu=[{n:'小安',d:0.6},{n:'小翠',d:1.5},{n:'阿耘',d:3},{n:'小樺',d:7},{n:'阿榕',d:12}];
+    if(L===1) stu=[stu[0],stu[2],stu[4]];
+    const can=(m,d)=> m==='walk'?d<=2 : m==='bike'?d<=5 : true;
+    const pick={};
+    box.innerHTML=`<div class="story">幫每位同學選一種<b>最低碳、又做得到</b>的上學方式。${L>=2?'（走路適合 2 公里內，腳踏車適合 5 公里內）':'（家太遠的話，走路會走不到喔！）'}</div><div id="stuL"></div><div class="row"><button id="trOk" disabled>送出規劃</button></div>`;
+    const W=box.querySelector('#stuL');
+    stu.forEach((s,k)=>{
+      const r=document.createElement('div'); r.className='stu';
+      r.innerHTML=`<span class="nm">🧒 ${s.n}（家離學校 ${s.d} 公里）</span>`;
+      MODES.forEach(m=>{
+        const b=document.createElement('button'); b.textContent=m.e+' '+m.n;
+        b.onclick=()=>{ pick[k]=m.id; r.querySelectorAll('button').forEach(x=>x.classList.toggle('on',x===b)); box.querySelector('#trOk').disabled = Object.keys(pick).length<stu.length; };
+        r.appendChild(b);
+      });
+      r.insertAdjacentHTML('beforeend','<div class="fb"></div>');
+      W.appendChild(r);
+    });
+    box.querySelector('#trOk').onclick=()=>{
+      box.querySelector('#trOk').remove();
+      let ok=0, kg=0, kgCar=0;
+      stu.forEach((s,k)=>{
+        const m=MODES.find(x=>x.id===pick[k]);
+        const zeroOk = can('walk',s.d)||can('bike',s.d);
+        const best = zeroOk ? ['walk','bike'].filter(x=>can(x,s.d)) : ['bus','pool'];
+        const fb=W.children[k].querySelector('.fb');
+        W.children[k].querySelectorAll('button').forEach(b=>b.disabled=true);
+        kg += s.d*2*m.f; kgCar += s.d*2*0.17;
+        if(!can(m.id,s.d)){ fb.innerHTML=`❌ ${s.d} 公里太遠了，${m.n}不太可行。建議：${best.map(x=>MODES.find(y=>y.id===x).n).join('或')}`; }
+        else if(best.includes(m.id)){ ok++; fb.innerHTML=`✅ 很棒的選擇！${L>=2?'每天來回約 '+r1(s.d*2*m.f*10)/10+' 公斤 CO2':''}`; }
+        else { fb.innerHTML=`🟡 可以，但還有更低碳的：${best.map(x=>MODES.find(y=>y.id===x).n).join('或')}${L>=2?'（你的選擇每天來回約 '+r1(s.d*2*m.f*10)/10+' 公斤 CO2）':''}`; }
+      });
+      beep(ok===stu.length);
+      const save1=Math.max(0,kgCar-kg);
+      box.insertAdjacentHTML('beforeend',`<div class="exp">🎯 選到最佳方式：${ok} / ${stu.length} 位同學。<br>${L>=2?`💡 如果大家都開車單獨接送，每天來回約排放 ${r1(kgCar)} 公斤 CO2；照你的規劃約 ${r1(kg)} 公斤，每天少排 ${r1(save1)} 公斤，一學期（約 100 天）就是 ${Math.round(save1*100)} 公斤！`:'💡 走路、騎腳踏車上學，不排放二氧化碳，還能運動身體！'}<br><small>（排放係數為教學用概估：汽車約 0.17、機車約 0.05、公車約 0.04 公斤／每人每公里）</small></div>`);
+      done(Math.round(ok/stu.length*5),5); contBtn(box);
+    };
+  };
+}
+
+/* 小遊戲 4：太陽能 */
+function stepSolar(){
+  return (box,done)=>{
+    const L=S.lv, cols=6, rows=4, budget=L===1?6:8;
+    // 遮蔭：左側大樹、中間水塔
+    const shade=new Set(['0,0','0,1','1,0','0,2','3,1','3,2','5,3','4,3']);
+    const placed=new Set();
+    box.innerHTML=`<div class="story">屋頂上有大樹的影子 🌳 和水塔 🛢️ 會擋住陽光。請放 <b>${budget}</b> 片太陽能板，放在陽光最多的地方！（再點一次可以移除）</div>
+      <p style="text-align:center">已放：<b id="pc">0</b> / ${budget}</p><div class="roof" style="grid-template-columns:repeat(${cols},1fr)"></div><div class="row"><button id="sOk" disabled>開始發電 ⚡</button></div>`;
+    const R=box.querySelector('.roof');
+    for(let y=0;y<rows;y++) for(let x=0;x<cols;x++){
+      const k=x+','+y, sh=shade.has(k);
+      const c=document.createElement('button'); c.className='cell'+(sh?' shade':'');
+      c.textContent = sh ? (k==='3,1'||k==='3,2'?'🛢️':'🌳') : '☀️';
+      c.onclick=()=>{
+        if(c._lock) return;
+        if(placed.has(k)){ placed.delete(k); c.classList.remove('panel'); c.textContent= sh ? (k==='3,1'||k==='3,2'?'🛢️':'🌳') : '☀️'; }
+        else { if(placed.size>=budget){ toast('太陽能板用完了，點已放的板子可以移除'); return; } placed.add(k); c.classList.add('panel'); c.textContent='🔷'; }
+        box.querySelector('#pc').textContent=placed.size; box.querySelector('#sOk').disabled=placed.size<budget;
+      };
+      c._k=k; R.appendChild(c);
+    }
+    box.querySelector('#sOk').onclick=()=>{
+      box.querySelector('#sOk').remove();
+      let good=0; R.querySelectorAll('.cell').forEach(c=>{ c._lock=true; if(placed.has(c._k)){ if(shade.has(c._k)) c.classList.add('bad'); else good++; } });
+      const kwhDay = good*EF.panelDay + (budget-good)*EF.panelDay*0.25;
+      const kgYear = kwhDay*365*EF.elec;
+      beep(good===budget);
+      box.insertAdjacentHTML('beforeend',`<div class="exp">🎯 照得到陽光的板子：${good} / ${budget} 片。${good<budget?'被遮住的板子（灰色）發電量只剩約四分之一。':''}<br>${L>=2?`⚡ 這片屋頂一天約發 ${r1(kwhDay)} 度電，一年約 ${Math.round(kwhDay*365)} 度，可以少排放約 <b>${Math.round(kgYear)} 公斤</b>二氧化碳，相當於 ${Math.round(kgYear/EF.tree)} 棵大樹一年的吸收量！`:'⚡ 太陽能發電不用燒煤和天然氣，乾淨又不排碳！'}</div>`);
+      done(Math.round(good/budget*5),5); contBtn(box);
+    };
+  };
+}
+
+/* 小遊戲 5～7：挑選 */
+const PICK={
+  tree:{t:'哪些做法可以<b>增加校園碳匯</b>？請選出全部正確的。',
+    yes:['🌱 種植台灣原生樹種','🌳 保護校園老樹','🏠 設置綠屋頂、綠牆','🥬 開闢校園菜圃、花圃'],
+    no:['🔨 砍掉大樹改鋪水泥','🛣️ 把草地全部鋪成柏油','🔥 焚燒落葉和枯枝'],
+    fact:'💡 一棵大樹一年約可吸收 12 公斤二氧化碳，還能讓樹下溫度降低好幾度！'},
+  comp:{t:'哪些東西可以放進<b>落葉堆肥箱</b>？請選出全部正確的。',
+    yes:['🍂 落葉','🌿 割下的草屑','🥬 生菜葉、菜梗','🍌 果皮','🌾 剪碎的小枯枝'],
+    no:['🛍️ 塑膠袋','🔋 廢電池','🥤 寶特瓶','🍖 肉和骨頭','🧴 清潔劑'],
+    fact:'💡 肉和骨頭容易發臭、引來老鼠和蟲，校園堆肥不放；電池含重金屬要另外回收。'},
+  eco:{t:'哪些做法能讓<b>校園生態更豐富</b>？請選出全部正確的。',
+    yes:['🌸 種植會開花的原生植物','🐞 設置昆蟲旅館','🍂 把落葉留在樹下當覆蓋','🌱 用堆肥代替化學肥料','🌼 保留一塊野花草地'],
+    no:['☠️ 噴灑大量農藥','🧱 把草地鋪成水泥','🌵 種會到處亂長的外來入侵植物','🧹 把小動物的家全部清乾淨'],
+    fact:'💡 校園裡生物越多樣，生態越健康；植物越多，吸收的二氧化碳也越多。'},
+  rain:{t:'「雨水撲滿」收集到的雨水，可以拿來做什麼？請選出全部正確的。',
+    yes:['🌼 澆花圃和菜圃','🚽 沖馬桶','🧽 拖地、清潔走廊','🏃 操場灑水降塵'],
+    no:['🥤 直接拿來喝','🍲 煮營養午餐','🦷 刷牙洗臉'],
+    fact:'💡 雨水沒有經過淨水處理，不能喝或煮飯；但拿來澆花、沖廁所，就能省下很多自來水。'},
+  water:{t:'哪些是<b>省水好習慣</b>？請選出全部正確的。',
+    yes:['🦷 用漱口杯刷牙','🧼 抹肥皂時關水龍頭','🌼 用洗菜水澆花','☔ 收集雨水沖廁所','📢 發現漏水馬上通報'],
+    no:['🚿 洗碗時讓水一直流','💦 用水管在走廊玩水','🛁 洗澡沖很久很久'],
+    fact:`💡 一度水（1000 公升）約排放 ${EF.water} 公斤二氧化碳，因為淨水和送水都要用電。`}
+};
+function stepPick(kind){
+  return (box,done)=>{
+    const P=PICK[kind];
+    let yes=P.yes.slice(), no=P.no.slice();
+    if(S.lv===1){ yes=shuffle(yes).slice(0,3); no=shuffle(no).slice(0,2); }
+    const all=shuffle(yes.map(t=>({t,ok:true})).concat(no.map(t=>({t,ok:false}))));
+    box.innerHTML=`<div class="story">${P.t}</div><div class="items"></div><div class="row"><button id="pOk">確定</button></div>`;
+    const I=box.querySelector('.items');
+    all.forEach(o=>{ const b=document.createElement('button'); b.className='item'; b.textContent=o.t; b.onclick=()=>{ if(o.lock) return; o.on=!o.on; b.classList.toggle('sel',o.on); }; o.b=b; I.appendChild(b); });
+    box.querySelector('#pOk').onclick=()=>{
+      box.querySelector('#pOk').remove();
+      let ok=0;
+      all.forEach(o=>{ o.lock=true; o.b.classList.remove('sel'); const sel=!!o.on;
+        if(sel===o.ok) ok++;
+        if(o.ok&&sel) o.b.classList.add('picked'); else if(o.ok&&!sel) o.b.classList.add('miss'); else if(!o.ok&&sel) o.b.classList.add('wrongp');
+      });
+      beep(ok===all.length);
+      box.insertAdjacentHTML('beforeend',`<div class="exp">🎯 判斷正確 ${ok} / ${all.length} 項。<br><small>🟩 選對　🟧 漏選　🟥 選錯</small><br>${P.fact}</div>`);
+      done(Math.round(ok/all.length*5),5); contBtn(box);
+    };
+  };
+}
+
+/* 任務結算 */
+function finishMission(){
+  const R=curRun; R.finished=true;
+  const ratio=R.total?R.got/R.total:0;
+  const isFin=R.id==='fin';
+  const pts=Math.round(ratio*(isFin?200:100));
+  const stars=starsOf(ratio);
+  const old=S.best[R.id]||{pts:0,stars:0};
+  const gain = stars>0 ? Math.max(0, Math.floor(pts/5)-Math.floor(old.pts/5)) : 0;
+  const idxBefore=carbonIdx();
+  if(stars>0 && (pts>old.pts || stars>old.stars)) S.best[R.id]={pts:Math.max(pts,old.pts),stars:Math.max(stars,old.stars)};
+  S.coins+=gain;
+  const idxAfter=carbonIdx();
+  save();
+  const firstFin = isFin && stars>0 && !old.stars;
+  $('#mbody').innerHTML=`<div class="res">
+    <h2>${stars>0?'任務完成！':'差一點點！'}</h2>
+    <div class="stars">${'⭐'.repeat(stars)}${'☆'.repeat(3-stars)}</div>
+    <div>得分 <b>${pts}</b> / ${isFin?200:100}　（答對率 ${Math.round(ratio*100)}%）</div>
+    ${stars>0?`<div>💰 獲得綠幣 <b>${gain}</b>${gain===0&&old.pts?'（要超過之前的最高分才會再拿到綠幣）':''}</div>
+    <div>🏭 校園碳排指數 ${idxBefore} ➜ <b>${idxAfter}</b></div>`:'<div>答對率要達 40% 才算過關，再試一次吧！</div>'}
+  </div>
+  <div class="row">${stars>0?'<button id="rUp">🛠️ 去升級校園</button>':''}<button class="ghost" id="rMap">回到地圖</button>${stars<3?'<button class="ghost" id="rAgain">再挑戰</button>':''}${firstFin?'<button id="rCert">📜 領取獎狀</button>':''}</div>`;
+  const id=R.id; curRun=null;
+  onClose=()=>{ renderAll(); submitScore(); };
+  if($('#rUp')) $('#rUp').onclick=()=>{ onClose=null; renderAll(); submitScore(); showUpgrades(); };
+  $('#rMap').onclick=closeModal;
+  if($('#rAgain')) $('#rAgain').onclick=()=>{ renderAll(); openMission(id); };
+  if($('#rCert')) $('#rCert').onclick=()=>{ closeModal(); showCert(); };
+  beep(stars>0);
+}
+
+/* ---------------- 升級 ---------------- */
+function showUpgrades(){
+  const idx=carbonIdx();
+  let h=`<h2>🛠️ 綠校園升級</h2><p>用 💰 綠幣改造校園，降低碳排指數！目前綠幣：<b>${S.coins}</b>　碳排指數：<b>${idx}</b></p><div class="ups">`;
+  UPGRADES.forEach(u=>{
+    const n=upCount(u.id), full=n>=u.max;
+    h+=`<div class="up"><div class="e">${u.e}</div><b>${u.name}</b>${u.max>1?`<div>（${n}/${u.max}）</div>`:''}<p>${u.d}</p><div>碳排指數 −${u.cut}</div>
+      <button data-u="${u.id}" ${full||S.coins<u.cost?'disabled':''}>${full?'✅ 已完成':'💰 '+u.cost}</button></div>`;
+  });
+  h+=`</div><div class="fact">💡 真實世界的淨零：先用節能、再生能源<b>減少排放</b>，剩下真的減不掉的，再用種樹等<b>碳匯</b>抵銷。</div>`;
+  openModal(h);
+  document.querySelectorAll('[data-u]').forEach(b=>b.onclick=()=>{
+    const u=UPGRADES.find(x=>x.id===b.dataset.u);
+    if(S.coins<u.cost||upCount(u.id)>=u.max) return;
+    S.coins-=u.cost; S.up[u.id]=upCount(u.id)+1; save(); beep(true);
+    toast(`${u.e} ${u.name} 完成！碳排指數 −${u.cut}`);
+    renderAll(); showUpgrades();
+  });
+}
+
+/* ---------------- 成就 ---------------- */
+function checkAch(){
+  const has=id=>S.ach.includes(id);
+  const cond={
+    first:()=>doneCount()>=1, all:()=>doneCount()===NM, badges:()=>badgeCount()===5,
+    three:()=>MIDS.every(m=>S.best[m]&&S.best[m].stars===3),
+    forest:()=>upCount('tree')>=4, build:()=>UPGRADES.every(u=>upCount(u.id)>=u.max),
+    zero:()=>carbonIdx()===0, final:()=>S.best.fin&&S.best.fin.stars>0
+  };
+  S.gb=S.gb||[];
+  BADGES.forEach((bd,i)=>{ if(hasBadge(bd)&&!S.gb.includes(bd.id)){ S.gb.push(bd.id); save(); beep(true); setTimeout(()=>toast(`🏅 恭喜取得「${bd.name}」！（${badgeCount()}/5）`),400+i*2700); } });
+  ACHS.forEach(a=>{ if(!has(a.id)&&cond[a.id]()){ S.ach.push(a.id); save(); setTimeout(()=>toast(`🏅 獲得成就：${a.e} ${a.name}`),3000); } });
+  if(carbonIdx()===0 && !S.zeroShown) setTimeout(zeroCelebrate,900);
+}
+function showAch(){
+  let h=`<h2>🏫 校園標章（${badgeCount()}/5）</h2><div class="ups">`;
+  BADGES.forEach(bd=>{ const got=hasBadge(bd);
+    h+=`<div class="up" style="${got?'background:#fff6d6;border-color:#e0a020':'opacity:.75'}"><div class="e" style="${got?'':'filter:grayscale(1)'}">${bd.ic}</div><b>${bd.name}</b><p>${bd.d}</p>
+      <div style="font-size:14px">${bd.ms.map(m=>`${S.best[m]&&S.best[m].stars?'✅':'⬜'} ${SPOTS[m].title}`).join('<br>')}</div>
+      <div style="margin-top:6px;font-weight:bold;color:${got?'#b07800':'#888'}">${got?'🏅 已取得':'尚未取得'}</div></div>`; });
+  h+=`</div><h2 style="margin-top:16px">🏅 成就</h2>`;
+  ACHS.forEach(a=>{ h+=`<div class="ach ${S.ach.includes(a.id)?'':'lock'}"><span class="e">${a.e}</span><div><b>${a.name}</b><br><small>${a.d}</small></div></div>`; });
+  h+=`<p style="color:#5a6d60">遊戲時間：${fmtTime(S.t)}</p><div class="row">${S.best.fin&&S.best.fin.stars?'<button id="aCert">📜 列印獎狀</button>':''}<button class="gray" id="aReset">重新開始（清除紀錄）</button></div>`;
+  openModal(h);
+  if($('#aCert')) $('#aCert').onclick=()=>{ closeModal(); showCert(); };
+  $('#aReset').onclick=()=>{ if(confirm('確定要清除這台裝置上的遊戲紀錄，從頭開始嗎？')){ try{localStorage.removeItem(SAVE_KEY);}catch(e){} location.reload(); } };
+}
+function zeroCelebrate(){
+  if(!$('#modal').classList.contains('hidden') || S.zeroShown) return;
+  S.zeroShown=true; save();
+  openModal(`<div class="res"><div style="font-size:70px">🌏🎉</div><h2>校園達成淨零！</h2>
+    <p>你透過節電、回收、綠色交通、太陽能、堆肥、節水和種樹，讓校園碳排指數降到 0！</p>
+    <div class="fact">🌱 在真實世界中，學校可以這樣做：<br>① 先盤查：知道哪裡用最多電、產生最多垃圾。<br>② 再減量：節能設備、再生能源、減少浪費。<br>③ 最後抵銷：種樹、保護綠地增加碳匯。<br>台灣的目標是 <b>2050 年達成淨零排放</b>，而你已經是淨零小隊長了！</div></div>
+    <div class="row"><button id="zOk">太棒了！</button></div>`);
+  $('#zOk').onclick=closeModal;
+}
+
+/* ---------------- 說明 ---------------- */
+function showHelp(first){
+  openModal(`<h2>❓ 怎麼玩</h2>
+    <div class="fact" style="background:#f3faf5">
+    🚶 方向鍵／WASD 移動（平板用右下角方向鍵），面向人物按<b>空白鍵</b>說話；也可以直接點地圖或點人物，主角會自己走過去。<br>
+    1️⃣ 找到校園裡頭上有 <b>❗</b> 的人，完成他交給你的任務（小遊戲＋問答）。<br>
+    2️⃣ 答對率 40% 以上過關，90% 以上拿到 ⭐⭐⭐。<br>
+    3️⃣ 過關可以拿 💰 綠幣；重玩拿到更高分，還能再賺綠幣。<br>
+    4️⃣ 用綠幣到「🛠️ 升級」裝太陽能板、種樹……把 <b>🏭 校園碳排指數</b>降到 0！<br>
+    5️⃣ 每個<b>校園標章</b>有 2 個任務，兩個都過關就拿到標章。5 枚標章都拿到後，挑戰北門的 <b>🏆 淨零大會考</b>，領取獎狀！</div>
+    <div class="fact">🌏 <b>什麼是淨零？</b> 我們用電、開車、丟垃圾都會排放二氧化碳，讓地球變熱。「淨零」就是先盡量<b>減少排放</b>，剩下的再用樹木等<b>碳匯</b>吸收，讓排放和吸收加起來等於零。</div>
+    <div class="row"><button id="hOk">${first?'我知道了，出發！':'關閉'}</button></div>`);
+  $('#hOk').onclick=closeModal;
+}
+
+/* ---------------- 排行榜 ---------------- */
+function submitScore(){
+  if(!SCRIPT_URL||!S) return;
+  const q=new URLSearchParams({action:'submit',pid:S.sid,cls:S.cls,nick:S.name,lv:S.lv,score:totalScore(),missions:doneCount(),hidden:hqDoneCount(),done:(S.best.fin&&S.best.fin.stars)?1:0,time:Math.round(S.t)});
+  fetch(SCRIPT_URL+'?'+q).then(r=>r.json()).then(d=>{ if(d&&d.ok&&d.rank) setTimeout(()=>toast(`🏆 成績已上傳！目前全校第 ${d.rank} 名`),1500); }).catch(()=>{});
+}
+function showBoard(scope){
+  scope=scope||'all';
+  openModal(`<h2>🏆 排行榜</h2><div class="row" style="margin-top:0"><button class="${scope==='all'?'':'ghost'}" id="bA">全校</button><button class="${scope==='cls'?'':'ghost'}" id="bC">${esc(S.cls)} 班</button></div><div id="bL" style="margin-top:12px">讀取中…</div>`);
+  $('#bA').onclick=()=>showBoard('all'); $('#bC').onclick=()=>showBoard('cls');
+  if(!SCRIPT_URL){ $('#bL').innerHTML='<p>排行榜還沒有設定喔！請老師依照「排行榜設定說明」完成設定。</p><p>你目前的成績：<b>'+totalScore()+'</b> 分</p>'; return; }
+  const q=new URLSearchParams({action:'top',cls:scope==='cls'?S.cls:'',pid:S.sid});
+  fetch(SCRIPT_URL+'?'+q).then(r=>r.json()).then(d=>{
+    const L=$('#bL'); if(!L) return;
+    if(!d||!d.ok){ L.textContent='排行榜讀取失敗，請稍後再試。'; return; }
+    if(!d.list.length){ L.textContent='還沒有人上榜，快來當第一名！'; return; }
+    L.innerHTML=`<table class="board"><tr><th>名次</th><th>班級</th><th>暱稱</th><th>分數</th><th>任務</th></tr>${d.list.map(r=>`<tr class="${r.me?'me':''}"><td>${r.rank}</td><td>${esc(r.cls)}</td><td>${esc(r.nick)}</td><td>${r.score}</td><td>${r.missions}/${NM}${r.done?' 🎓':''}</td></tr>`).join('')}</table>${d.myRank?`<p>你目前是全校第 <b>${d.myRank}</b> 名</p>`:''}`;
+  }).catch(()=>{ const L=$('#bL'); if(L) L.textContent='排行榜連線失敗，請稍後再試。'; });
+}
+
+/* ---------------- 獎狀 ---------------- */
+function showCert(){
+  const d=new Date(), roc=d.getFullYear()-1911;
+  $('#cert').innerHTML=`<div class="certIn"><h1>獎　狀</h1>
+    <p><b style="font-size:30px">${esc(S.cls)} 班　${esc(S.name)}</b></p>
+    <p>在「淨零綠校園大作戰」中，完成十大淨零任務，取得節電、資源循環、低碳生活、永續綠、水資源五枚校園標章，並通過淨零大會考，為校園減碳盡一份心力，表現優異，特頒此狀，以資鼓勵。</p>
+    <div style="font-size:26px">榮獲「淨零小隊長」稱號（${LVNAME[S.lv]}級）</div>
+    <div style="font-size:30px;letter-spacing:6px">${BADGES.filter(hasBadge).map(b=>b.ic).join(' ')}</div>
+    <div style="font-size:20px">總分 ${totalScore()} 分・校園標章 ${badgeCount()}/5・成就 ${S.ach.length}/${ACHS.length}</div>
+    <div style="margin-top:30px">${esc(SCHOOL_NAME)}　　中華民國 ${roc} 年 ${d.getMonth()+1} 月 ${d.getDate()} 日</div></div>
+    <div class="row"><button onclick="window.print()">🖨️ 列印</button><button class="ghost" onclick="document.getElementById('cert').classList.add('hidden')">返回遊戲</button></div>`;
+  $('#cert').classList.remove('hidden'); window.scrollTo(0,0);
+}
+
+/* =====================================================================
+   校園世界（俯視角 RPG）：依照學校的手繪地圖配置
+   ===================================================================== */
+const cv=$('#cv'), ctx=cv.getContext('2d');
+// 畫面大小：電腦橫式 800×576；手機（窄螢幕）改成直式 448×576，人物比較大
+let VW=800, VH=576; const TS=32, MW=56, MH=44, OL='#2b2233';
+function fitCanvas(){ const n=innerWidth<640; VW=n?448:800; VH=576; if(cv.width!==VW){ cv.width=VW; cv.height=VH; } }
+fitCanvas(); addEventListener('resize',fitCanvas);
+let gT=0;
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+function hash(x,y,k){ let n=Math.imul(x,374761393)+Math.imul(y,668265263)+Math.imul(k,1442695041); n=Math.imul(n^(n>>>13),1274126177); return ((n^(n>>>16))>>>0)/4294967296; }
+function rgb(hex){ hex=hex.replace('#',''); if(hex.length===3) hex=hex.split('').map(c=>c+c).join(''); const n=parseInt(hex,16); return [n>>16,(n>>8)&255,n&255]; }
+function darken(hex,a){ const [r,g,b]=rgb(hex); return `rgb(${r*(1-a)|0},${g*(1-a)|0},${b*(1-a)|0})`; }
+function lighten(hex,a){ const [r,g,b]=rgb(hex); return `rgb(${r+(255-r)*a|0},${g+(255-g)*a|0},${b+(255-b)*a|0})`; }
+function rr(g,x,y,w,h,r,fill,stroke=true){ g.beginPath(); if(g.roundRect) g.roundRect(x,y,w,h,r); else g.rect(x,y,w,h); if(fill){g.fillStyle=fill; g.fill();} if(stroke) g.stroke(); }
+function circ(g,x,y,r,fill,stroke=true){ g.beginPath(); g.arc(x,y,r,0,Math.PI*2); if(fill){g.fillStyle=fill; g.fill();} if(stroke) g.stroke(); }
+function ell(g,x,y,rx,ry,fill,stroke=true){ g.beginPath(); g.ellipse(x,y,rx,ry,0,0,Math.PI*2); if(fill){g.fillStyle=fill; g.fill();} if(stroke) g.stroke(); }
+
+/* ---------------- 地圖 ---------------- */
+// . 草地  _ 鋪面  = 馬路  z 斑馬線  W 溪流  t 操場  , 室內地板  D 門  # 建築  b 黑板
+// k 課桌  T 樹  m 椰子樹  G 大榕樹  f 圍牆  g 校門  v 菜圃  y 落葉  F 花  R 回收桶
+const MAP=[]; for(let y=0;y<MH;y++) MAP.push(new Array(MW).fill('.'));
+function R(c,x1,y1,x2,y2){ for(let y=y1;y<=y2;y++) for(let x=x1;x<=x2;x++) MAP[y][x]=c; }
+const BLD=[
+  {k:'antsui', name:'安翠樓', x1:3, y1:3, x2:30,y2:8,  roof:'solar', wall:'#f3ead6', trim:'#7d6b55', floors:2},
+  {k:'west',   name:'幼兒園',  x1:2, y1:11,x2:6, y2:15, roof:'#f2994a', wall:'#fff3dc', trim:'#c0603a'},
+  {k:'nanyun', name:'南耘樓', x1:9, y1:12,x2:21,y2:15, roof:'solar', wall:'#f3d277', trim:'#9a7b2c', floors:2},
+  {k:'red',    name:'廚房',   x1:34,y1:2, x2:37,y2:5,  roof:'#d24a3d', wall:'#f1e4d6', trim:'#7b2c24'},
+  {k:'stage',  name:'司令台', x1:24,y1:11,x2:29,y2:14, roof:'#c8553d', wall:'#efe6d6', trim:'#7b2c24'},
+  {k:'dome',   name:'光電球場', x1:33,y1:8, x2:42,y2:14, roof:'glass', wall:'#dde8e3', trim:'#4f6d4c'},
+  {k:'gym',    name:'南邊光電球場', x1:34,y1:27,x2:39,y2:34, roof:'glass', wall:'#dde8e3', trim:'#4f6d4c'}
+];
+(function buildMap(){
+  for(let x=0;x<MW;x++) MAP[0][x]='T';
+  for(let y=0;y<35;y++) MAP[y][0]='T';
+  R('f',1,1,49,1);                                // 北圍牆（北門＝安翠樓後門，在下面設定）
+  R('f',0,35,51,35); R('g',16,35,18,35);          // 南圍牆、南大門
+  R('W',52,0,55,MH-1);                            // 溪流
+  R('_',50,1,51,35);                              // 溪畔步道
+  R('_',0,36,51,36); R('=',0,37,51,40); R('z',16,37,18,40); R('_',0,41,51,41);
+  // 步道
+  R('_',31,2,32,17); R('_',2,9,32,10); R('_',17,16,18,34); R('_',7,16,30,17); R('_',31,16,49,17); R('_',43,18,49,21);
+  // 安翠樓（可以走進去的教室）
+  R('#',3,3,30,8); R(',',4,4,29,6); for(const x of [10,23]){ MAP[7][x]='D'; MAP[8][x]='D'; }  // 南面兩層樓外牆＋兩格高的門口
+  R('b',6,3,12,3); R('b',19,3,26,3);
+  for(const x of [5,7,9,11,13]) for(const y of [5,6]) MAP[y][x]='k';
+  for(const x of [18,20,22,24,26,28]) for(const y of [5,6]) MAP[y][x]='k';
+  R('#',2,11,6,15);                               // 幼兒園
+  MAP[14][7]='L';                                 // 幼兒園溜滑梯
+  R('#',9,12,21,15);                              // 南耘樓
+  R('#',34,2,37,5);                               // 廚房
+  R('y',38,2,43,5);                               // 落葉回收區
+  R('C',33,8,42,14);                              // 北邊光電球場（屋頂下可以走）
+  // 司令台：後牆、可以走上去的高台（Q）、正面高牆、中間樓梯（U）
+  R('#',24,11,29,11); R('Q',24,12,29,13); R('#',24,14,29,14); R('U',26,14,27,14);
+  MAP[15][23]='P';                                // 旗桿（國旗）
+  R('v',3,25,7,26);                               // 菜圃
+  // 小孔廟園區
+  R('_',10,24,16,24); R('_',10,25,13,25);
+  R('K',11,22,12,23);
+  R('t',21,19,41,26);                             // 操場
+  R('C',34,27,39,34);                             // 南邊光電球場（操場下方，屋頂下可以走）
+  for(const [x,y] of [[44,23],[47,24],[45,26],[48,28],[44,29]]) MAP[y][x]='T';
+  R('R',9,16,11,16);                              // 回收桶
+  // 榕樹區
+  for(const [x,y] of [[44,7],[46,7],[48,7],[44,9],[49,9],[44,12],[49,12],[44,14],[46,14],[48,14],[45,18],[47,19],[49,19]]) MAP[y][x]='T';
+  R('G',46,10,47,11);
+  // 椰子樹
+  for(let y=19;y<=33;y+=2){ MAP[y][15]='m'; MAP[y][20]='m'; }
+  // 圍牆邊的樹
+  for(let x=2;x<=29;x+=3) MAP[2][x]='T';
+  // 北門（後門）：安翠樓教室北牆開門 → 通到北圍牆的北門
+  for(const x of [16,17]){                        // 兩格寬
+    MAP[3][x]='D'; MAP[2][x]='_'; MAP[1][x]='g';
+    MAP[7][x]='D'; MAP[8][x]='D';                 // 1 樓打通：從北門直直穿過安翠樓到前面步道
+  }
+  for(const x of [2,5,8,11,23,26,29,32,42,45]) MAP[34][x]='T';
+  for(const [x,y] of [[2,30],[7,32],[12,31],[24,29],[28,31],[31,28],[42,31],[47,32],[44,33]]) MAP[y][x]='T';
+  for(const [x,y] of [[1,4],[1,8],[1,23],[1,27],[7,12],[8,21],[23,13],[30,12],[30,14],[44,4],[46,2],[48,4],[49,2]]) MAP[y][x]='T';
+  for(let x=1;x<52;x+=3) MAP[42][x]='T';
+  // 花圃
+  for(const [x,y] of [[3,22],[4,22],[3,23],[10,22],[10,23],[13,22],[13,23],[10,29],[11,29],[23,12],[30,13]]) MAP[y][x]='F';
+})();
+const SOLID=new Set(['#','b','T','W','f','k','v','m','G','R','=','P','K','L']);
+const tileAt=(x,y)=>(x<0||y<0||x>=MW||y>=MH)?'#':MAP[y][x];
+const bldAt=(x,y)=>BLD.find(b=>x>=b.x1&&x<=b.x2&&y>=b.y1&&y<=b.y2);
+const isWall=c=>c==='#'||c==='b';
+
+/* ---------------- 預先繪製靜態地圖 ---------------- */
+const mapCv=document.createElement('canvas'); mapCv.width=MW*TS; mapCv.height=MH*TS;
+const MS=3, miniCv=document.createElement('canvas'); miniCv.width=MW*MS; miniCv.height=MH*MS;
+function plaque(g,text,cx,cy,big){
+  g.font=`bold ${big?17:13}px "Microsoft JhengHei",sans-serif`;
+  const w=g.measureText(text).width+(big?22:16), h=big?27:21;
+  g.lineWidth=2; g.strokeStyle=OL;
+  g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(cx-w/2+3,cy-h/2+3,w,h);
+  rr(g,cx-w/2,cy-h/2,w,h,5,big?'#f6c445':'#7a4a24');
+  g.fillStyle=big?'rgba(255,255,255,.35)':'rgba(255,255,255,.15)'; g.fillRect(cx-w/2+3,cy-h/2+3,w-6,3);
+  g.fillStyle=big?OL:'#fff3c4'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(text,cx,cy+1);
+}
+function drawGrass(g,X,Y,tx,ty){
+  g.fillStyle=hash(tx>>1,ty>>1,7)>.5?'#86c96e':'#8dcf74'; g.fillRect(X,Y,TS,TS);
+  for(let i=0;i<3;i++){ const gx=X+4+hash(tx,ty,i)*22, gy=Y+6+hash(ty,tx,i+3)*20;
+    g.strokeStyle='#69ad55'; g.lineWidth=1.2; g.beginPath(); g.moveTo(gx,gy+4); g.lineTo(gx-2,gy); g.moveTo(gx+1,gy+4); g.lineTo(gx+1,gy-1); g.moveTo(gx+2,gy+4); g.lineTo(gx+4,gy); g.stroke(); }
+  if(hash(tx,ty,11)>.9){ g.fillStyle=hash(tx,ty,12)>.5?'#fff':'#ffe066'; g.beginPath(); g.arc(X+8+hash(tx,ty,13)*16,Y+8+hash(tx,ty,14)*16,1.8,0,7); g.fill(); }
+}
+function drawGround(g,tx,ty){
+  const X=tx*TS, Y=ty*TS, c=MAP[ty][tx];
+  if('.TFmGRtPL'.includes(c)){ drawGrass(g,X,Y,tx,ty); return; }
+  if(c==='C'){ g.fillStyle='#5f9e6e'; g.fillRect(X,Y,TS,TS); return; }
+  if(c==='Q'){ // 司令台檯面
+    g.fillStyle='#ece2d0'; g.fillRect(X,Y,TS,TS); g.fillStyle='#ddd0b8'; g.fillRect(X,Y+15,TS,2); g.fillRect(X+((ty%2)?8:24),Y,2,TS);
+    g.fillStyle='#b9a888'; if(tileAt(tx-1,ty)!=='Q') g.fillRect(X,Y,4,TS); if(tileAt(tx+1,ty)!=='Q') g.fillRect(X+TS-4,Y,4,TS);
+    return; }
+  if(c==='U'){ // 樓梯
+    for(let i=0;i<4;i++){ g.fillStyle=i%2?'#cfc6b6':'#e2dacb'; g.fillRect(X,Y+i*8,TS,8); g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(X,Y+i*8+6,TS,2); }
+    g.fillStyle='#8a7d68'; if(tileAt(tx-1,ty)!=='U') g.fillRect(X,Y,3,TS); if(tileAt(tx+1,ty)!=='U') g.fillRect(X+TS-3,Y,3,TS);
+    return; }  // 光電球場地面（球場線在 drawCourts 畫）
+  if(c==='K'){ g.fillStyle='#d8d2c6'; g.fillRect(X,Y,TS,TS); g.fillStyle='#c4bdaf'; g.fillRect(X,Y+15,TS,2); g.fillRect(X+15,Y,2,TS); return; }
+  if(c==='y'){ drawGrass(g,X,Y,tx,ty); g.fillStyle='rgba(210,160,90,.55)'; g.fillRect(X,Y,TS,TS);
+    for(let i=0;i<7;i++){ g.fillStyle=['#d7913c','#c47a2c','#e5ac4c','#b8652a','#e9b85f'][(i+tx+ty)%5]; g.save(); g.translate(X+3+hash(tx,ty,i)*26,Y+3+hash(ty,tx,i)*26); g.rotate(hash(tx,ty,i+9)*6); g.beginPath(); g.ellipse(0,0,4.5,2.6,0,0,7); g.fill(); g.restore(); }
+    return; }
+  if(c==='v'){ g.fillStyle='#8a5a34'; g.fillRect(X,Y,TS,TS); g.fillStyle='#6f4527'; g.fillRect(X,Y+TS-3,TS,3);
+    for(let i=0;i<2;i++) for(let j=0;j<3;j++){ const cx=X+6+j*10, cy=Y+9+i*13; g.fillStyle='#3f9a3f'; g.beginPath(); g.ellipse(cx-2,cy,3.5,2.2,-.6,0,7); g.ellipse(cx+2,cy,3.5,2.2,.6,0,7); g.fill(); g.fillStyle='#7ed06a'; g.beginPath(); g.arc(cx,cy-1,1.8,0,7); g.fill(); }
+    return; }
+  if(c==='_'||c==='g'){
+    if(ty>=36){ g.fillStyle='#cfccc4'; g.fillRect(X,Y,TS,TS); g.fillStyle='#bdb9b0'; g.fillRect(X,Y+15,TS,2); g.fillRect(X+((ty%2)?8:24),Y,2,15); g.fillRect(X+((ty%2)?24:8),Y+17,2,15);
+      if(ty===36){ g.fillStyle='#9b978e'; g.fillRect(X,Y+TS-4,TS,4); } if(ty===41){ g.fillStyle='#9b978e'; g.fillRect(X,Y,TS,4); } return; }
+    g.fillStyle='#e6d6b0'; g.fillRect(X,Y,TS,TS); g.fillStyle='#d4c193'; const o=(ty%2)*8;
+    g.fillRect(X,Y+15,TS,2); g.fillRect(X+((o+8)%32),Y,2,15); g.fillRect(X+((o+24)%32),Y,2,15); g.fillRect(X+o,Y+17,2,15); g.fillRect(X+o+16,Y+17,2,15);
+    g.fillStyle='rgba(255,255,255,.25)'; g.fillRect(X+3,Y+2,8,2);
+    const grassy=c2=>'.TFmGy'.includes(c2);
+    g.fillStyle='#86c96e';
+    if(grassy(tileAt(tx,ty-1))) for(let i=0;i<8;i++) g.fillRect(X+i*4,Y,3,2+(hash(tx,ty,i)*3|0));
+    if(grassy(tileAt(tx,ty+1))) for(let i=0;i<8;i++){ const h=2+(hash(tx,ty,i+8)*3|0); g.fillRect(X+i*4,Y+TS-h,3,h); }
+    if(grassy(tileAt(tx-1,ty))) for(let i=0;i<8;i++) g.fillRect(X,Y+i*4,2+(hash(tx,ty,i+16)*3|0),3);
+    if(grassy(tileAt(tx+1,ty))) for(let i=0;i<8;i++){ const w=2+(hash(tx,ty,i+24)*3|0); g.fillRect(X+TS-w,Y+i*4,w,3); }
+    return; }
+  if(c===','||c==='k'||c==='D'){ g.fillStyle='#e2b77e'; g.fillRect(X,Y,TS,TS); g.fillStyle='#cf9f62'; for(let i=0;i<4;i++){ g.fillRect(X,Y+i*8+7,TS,1); g.fillRect(X+((i+tx)%2?6:20),Y+i*8,1,7); } g.fillStyle='rgba(255,255,255,.18)'; g.fillRect(X,Y+((tx+ty)%4)*8,TS,2); return; }
+  if(c==='='||c==='z'){
+    g.fillStyle='#4f525a'; g.fillRect(X,Y,TS,TS);
+    for(let i=0;i<6;i++){ g.fillStyle=i%2?'#464950':'#5a5d65'; g.fillRect(X+hash(tx,ty,i)*30|0,Y+hash(ty,tx,i)*30|0,2,2); }
+    if(c==='='){ if(ty===39){ g.fillStyle='#f2c230'; g.fillRect(X+4,Y-1.5,18,3); } if(ty===37){ g.fillStyle='#e8e8e8'; g.fillRect(X,Y+3,TS,2); } if(ty===40){ g.fillStyle='#e8e8e8'; g.fillRect(X,Y+TS-5,TS,2); } }
+    else { g.fillStyle='#f4f4f4'; g.fillRect(X+3,Y+4,TS-6,9); g.fillRect(X+3,Y+20,TS-6,9); }
+    return; }
+  if(c==='W'){ g.fillStyle='#4aa3d8'; g.fillRect(X,Y,TS,TS); if(tx===52){ g.fillStyle='#8a7a5a'; g.fillRect(X,Y,5,TS); g.fillStyle='#a9987a'; g.fillRect(X,Y,3,TS); }
+    g.strokeStyle='rgba(255,255,255,.35)'; g.lineWidth=1.5; g.beginPath(); const wy=Y+8+hash(tx,ty,3)*16; g.moveTo(X+6,wy); g.quadraticCurveTo(X+12,wy-3,X+18,wy); g.stroke(); return; }
+  g.fillStyle='#86c96e'; g.fillRect(X,Y,TS,TS);
+}
+function drawRoof(g,B,X,Y,tx,ty,h){
+  if(B.roof==='solar'){
+    g.fillStyle='#33425b'; g.fillRect(X,Y,TS,h);
+    g.fillStyle='#5f7698'; for(let i=0;i<TS;i+=8) g.fillRect(X+i,Y,1,h); for(let j=0;j<h;j+=8) g.fillRect(X,Y+j,TS,1);
+    g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(X+((tx*3+ty)%4)*8+1,Y+1,6,Math.min(6,h-1));
+    g.fillStyle='#c9cfd8'; if(!isWall(tileAt(tx,ty-1))) g.fillRect(X,Y,TS,3); if(!isWall(tileAt(tx-1,ty))) g.fillRect(X,Y,3,h); if(!isWall(tileAt(tx+1,ty))) g.fillRect(X+TS-3,Y,3,h);
+  } else if(B.roof==='glass'){
+    g.fillStyle='#3e5f58'; g.fillRect(X,Y,TS,h);
+    g.fillStyle='#7ea69c'; for(let i=4;i<TS;i+=9) g.fillRect(X+i,Y,1.3,h);
+    g.fillStyle='rgba(255,255,255,.07)'; if((tx-B.x1)<(B.x2-B.x1+1)/2) g.fillRect(X,Y,TS,h);
+    g.fillStyle='#e3c93e'; if((tx-B.x1)%4===0) g.fillRect(X,Y,2.5,h);
+    if(!isWall(tileAt(tx,ty-1))) g.fillRect(X,Y,TS,3); if(!isWall(tileAt(tx-1,ty))) g.fillRect(X,Y,3,h); if(!isWall(tileAt(tx+1,ty))) g.fillRect(X+TS-3,Y,3,h);
+    if(ty===((B.y1+B.y2)>>1)) g.fillRect(X,Y+14,TS,2);
+  } else {
+    g.fillStyle=B.roof; g.fillRect(X,Y,TS,h); g.fillStyle=darken(B.roof,.15); for(let i=6;i<h;i+=7) g.fillRect(X,Y+i,TS,1.5);
+    g.fillStyle=lighten(B.roof,.25); if(!isWall(tileAt(tx,ty-1))) g.fillRect(X,Y,TS,3); if(!isWall(tileAt(tx-1,ty))) g.fillRect(X,Y,3,h);
+    g.fillStyle=darken(B.roof,.3); if(!isWall(tileAt(tx+1,ty))) g.fillRect(X+TS-3,Y,3,h);
+  }
+}
+function drawWall(g,c,tx,ty){
+  const X=tx*TS, Y=ty*TS, B=bldAt(tx,ty), s=tileAt(tx,ty+1);
+  if(B.k==='stage'){
+    if(ty===B.y1){ // 後牆（在屋頂下）
+      g.fillStyle='#b9a888'; g.fillRect(X,Y,TS,10); g.fillStyle='#f1e4d6'; g.fillRect(X,Y+10,TS,22);
+      g.fillStyle='#2e7d4f'; g.fillRect(X+2,Y+13,TS-4,13); g.fillStyle='#7b2c24'; g.fillRect(X,Y+TS-3,TS,3);
+      return; }
+    // 正面：比一般牆更高（整格），上緣是檯面邊、有紅色布幔
+    g.fillStyle='#ece2d0'; g.fillRect(X,Y,TS,5); g.fillStyle='rgba(0,0,0,.25)'; g.fillRect(X,Y+5,TS,2);
+    g.fillStyle='#d9cdb8'; g.fillRect(X,Y+7,TS,TS-7);
+    g.fillStyle='#c4b69c'; for(let r=0;r<3;r++){ g.fillRect(X,Y+17+r*5,TS,1); g.fillRect(X+((r%2)?8:20),Y+17+r*5,1,5); }
+    g.fillStyle='#d24a3d'; g.fillRect(X,Y+8,TS,7); g.fillStyle='#f4c542'; for(let i=4;i<TS;i+=10){ g.beginPath(); g.arc(X+i,Y+11.5,1.6,0,7); g.fill(); }
+    g.fillStyle='#7b2c24'; g.fillRect(X,Y+TS-3,TS,3);
+    return;
+  }
+  if(B.floors===2 && (ty===B.y2-1||ty===B.y2)){ // 兩層樓：外牆佔兩格高，上下各一排窗
+    // 整面外牆從上一格的 12px 處開始，到下一格底部，共 52px，兩層各 26px
+    const up=ty===B.y2-1, FT=(B.y2-1)*TS+12, FL=26, FB=FT+FL*2;
+    g.save(); g.beginPath(); g.rect(X,Y,TS,TS); g.clip();
+    if(up){ if(B.k==='antsui'){ g.fillStyle='#c9bfae'; g.fillRect(X,Y,TS,12); } else drawRoof(g,B,X,Y,tx,ty,12); g.fillStyle='rgba(0,0,0,.3)'; g.fillRect(X,FT-2,TS,2); }
+    g.fillStyle=B.wall; g.fillRect(X,FT,TS,FB-FT);
+    g.fillStyle=darken(B.wall,.08); g.fillRect(X,FT,1,FB-FT);
+    g.strokeStyle=OL; g.lineWidth=1.5;
+    for(let f=0;f<2;f++){ const wy=FT+f*FL+4;
+      rr(g,X+7,wy,18,FL-10,1,'#9fd3f0');
+      g.fillStyle='rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(X+9,wy+8); g.lineTo(X+14,wy+2); g.lineTo(X+16,wy+2); g.lineTo(X+11,wy+8); g.fill(); }
+    g.fillStyle=B.trim; g.fillRect(X,FT+FL-2,TS,2.5); g.fillRect(X,FB-3,TS,3);
+    g.restore();
+    return;
+  }
+  const face=!isWall(s)&&s!=='D', outdoor=face&&!bldAt(tx,ty+1), topH=face?12:TS;
+  if(B.k==='antsui') { // 有室內的建築：牆頂用淺色
+    g.fillStyle='#c9bfae'; g.fillRect(X,Y,TS,topH); g.fillStyle='#b3a893'; g.fillRect(X,Y+topH-3,TS,3);
+    g.fillStyle='#ddd4c4'; if(!isWall(tileAt(tx,ty-1))) g.fillRect(X,Y,TS,3);
+  } else drawRoof(g,B,X,Y,tx,ty,topH);
+  if(!face) return;
+  g.fillStyle='rgba(0,0,0,.3)'; g.fillRect(X,Y+topH-2,TS,2);
+  const FY=Y+topH, FH=TS-topH;
+  g.fillStyle=B.wall; g.fillRect(X,FY,TS,FH);
+  if(c==='b'){ g.strokeStyle='#7a4a24'; g.lineWidth=3; g.fillStyle='#2e5d45'; g.fillRect(X,FY+2,TS,FH-6); g.beginPath(); g.moveTo(X,FY+FH-3); g.lineTo(X+TS,FY+FH-3); g.stroke();
+    if(tx===8){ g.fillStyle='rgba(255,255,255,.85)'; g.font='bold 9px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('節能減碳',X+TS,FY+8); } return; }
+  if(outdoor && B.k==='stage'){ // 司令台正面：檯面＋中間的階梯
+    g.fillStyle=darken(B.wall,.12); g.fillRect(X,FY,TS,4);
+    g.fillStyle=B.trim; g.fillRect(X,Y+TS-3,TS,3);
+    const mid=(B.x1+B.x2)/2;
+    if(Math.abs(tx+.5-(mid+.5))<1.1){ for(let i=0;i<3;i++){ g.fillStyle=i%2?'#d8cfbf':'#c9bfae'; g.fillRect(X+2,FY+5+i*4,TS-4,4); } }
+    else { g.fillStyle='#d24a3d'; g.fillRect(X,FY+6,TS,6); g.fillStyle='#f4c542'; for(let i=4;i<TS;i+=10){ g.beginPath(); g.arc(X+i,FY+9,1.6,0,7); g.fill(); } }
+    return; }
+  if(outdoor){
+    g.fillStyle=B.trim; g.fillRect(X,Y+TS-3,TS,3);
+    if(B.roof==='glass'){ g.fillStyle='#9fd3e8'; g.fillRect(X+2,FY+2,TS-4,FH-6); g.fillStyle='#4f6d4c'; g.fillRect(X+TS/2-1,FY+2,2,FH-6); }
+    else if(tileAt(tx-1,ty+1)!=='D'&&tileAt(tx+1,ty+1)!=='D'){ g.strokeStyle=OL; g.lineWidth=1.5; rr(g,X+7,FY+2,18,FH-7,1,'#9fd3f0'); g.fillStyle='rgba(255,255,255,.7)'; g.beginPath(); g.moveTo(X+9,FY+11); g.lineTo(X+14,FY+4); g.lineTo(X+16,FY+4); g.lineTo(X+11,FY+11); g.fill(); }
+  } else { g.fillStyle=darken(B.wall,.1); g.fillRect(X,Y+TS-8,TS,8); g.fillStyle=B.trim; g.fillRect(X,Y+TS-9,TS,1.5); }
+}
+function drawStatic(g,c,tx,ty){
+  const X=tx*TS, Y=ty*TS; g.lineWidth=1.5; g.strokeStyle=OL;
+  if(isWall(c)){ drawWall(g,c,tx,ty); return; }
+  if(c==='F'){ for(let i=0;i<5;i++){ const fx=X+5+hash(tx,ty,i)*22, fy=Y+6+hash(ty,tx,i)*20;
+    g.strokeStyle='#3d8a43'; g.lineWidth=1.5; g.beginPath(); g.moveTo(fx,fy+3); g.lineTo(fx,fy+9); g.stroke();
+    g.fillStyle=['#ff6b8a','#ffd447','#ffffff','#c78bff','#ff9a4a'][(i+tx)%5]; for(let k=0;k<5;k++){ const a=k/5*Math.PI*2; g.beginPath(); g.arc(fx+Math.cos(a)*2.6,fy+Math.sin(a)*2.6,2,0,7); g.fill(); }
+    g.fillStyle='#f4a62a'; g.beginPath(); g.arc(fx,fy,1.4,0,7); g.fill(); } return; }
+  if(c==='f'){ g.fillStyle='rgba(0,0,0,.15)'; g.fillRect(X,Y+27,TS,4); g.strokeStyle=OL; g.lineWidth=1.5;
+    rr(g,X,Y+11,TS,4,0,'#f6f6f6'); rr(g,X,Y+20,TS,4,0,'#f6f6f6');
+    for(let i=0;i<4;i++){ g.beginPath(); g.moveTo(X+i*8+2,Y+28); g.lineTo(X+i*8+2,Y+7); g.lineTo(X+i*8+4,Y+4); g.lineTo(X+i*8+6,Y+7); g.lineTo(X+i*8+6,Y+28); g.closePath(); g.fillStyle='#fff'; g.fill(); g.stroke(); } return; }
+  if(c==='D'){ g.fillStyle='#7d6b55'; if(tileAt(tx-1,ty)!=='D') g.fillRect(X,Y,4,TS); if(tileAt(tx+1,ty)!=='D') g.fillRect(X+TS-4,Y,4,TS);
+    if(tileAt(tx,ty+1)!=='D') rr(g,X+(tileAt(tx-1,ty)==='D'?0:6),Y+20,TS-(tileAt(tx-1,ty)==='D'?0:6)-(tileAt(tx+1,ty)==='D'?0:6),8,2,'#5d8b4f'); return; }
+  if(c==='k'){ g.fillStyle='rgba(0,0,0,.15)'; g.fillRect(X+5,Y+22,24,4); rr(g,X+8,Y+19,16,8,2,'#3c7fd0'); rr(g,X+3,Y+4,26,15,2,'#c58d50'); g.fillStyle='#d9a467'; g.fillRect(X+5,Y+6,22,3); g.fillStyle='#fff'; g.fillRect(X+8,Y+9,7,6); g.fillStyle='#7ed957'; g.fillRect(X+18,Y+10,6,2); return; }
+  if(c==='R'){ const col=['#3c7fd0','#f2c230','#2e9d5b'][tx%3], lab=['紙','塑','罐'][tx%3];
+    g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(X+5,Y+26,24,4); rr(g,X+6,Y+8,20,20,3,col); rr(g,X+4,Y+4,24,6,2,darken(col,.15));
+    g.fillStyle='#fff'; g.font='bold 11px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText(lab,X+16,Y+18); return; }
+}
+function drawPlayground(g){
+  const x1=21*TS, y1=19*TS, w=21*TS, h=8*TS;
+  g.lineWidth=3; g.strokeStyle=OL;
+  g.fillStyle='rgba(0,0,0,.15)'; g.beginPath(); g.roundRect(x1+6,y1+8,w-4,h-4,90); g.fill();
+  g.fillStyle='#c9573f'; g.beginPath(); g.roundRect(x1+2,y1+2,w-4,h-4,90); g.fill(); g.stroke();
+  g.strokeStyle='rgba(255,255,255,.85)'; g.lineWidth=2;
+  for(const ins of [14,28,42]){ g.beginPath(); g.roundRect(x1+ins,y1+ins,w-ins*2,h-ins*2,Math.max(10,90-ins)); g.stroke(); }
+  const fx=x1+56, fy=y1+56, fw=w-112, fh=h-112;
+  g.fillStyle='#86c96e'; g.beginPath(); g.roundRect(fx,fy,fw,fh,40); g.fill(); g.strokeStyle=OL; g.lineWidth=2; g.stroke();
+  for(let i=0;i<fw;i+=TS){ if((i/TS)%2){ g.fillStyle='rgba(255,255,255,.08)'; g.fillRect(fx+i,fy+4,TS,fh-8); } }
+  // 藍色球場＋兩個紅色場地
+  const cx=x1+w/2, cy=y1+h/2;
+  g.lineWidth=2.5; g.strokeStyle='#fff'; rr(g,cx-150,cy-62,300,124,4,'#4f80d4');
+  rr(g,cx-136,cy-48,124,96,2,'#c9474b'); rr(g,cx+12,cy-48,124,96,2,'#c9474b');
+  g.fillStyle='#2c2c34'; g.fillRect(cx-136,cy-4,124,8); g.fillRect(cx+12,cy-4,124,8);
+  g.strokeStyle='#fff'; g.lineWidth=2; g.beginPath(); g.moveTo(cx-74,cy-48); g.lineTo(cx-74,cy+48); g.moveTo(cx+74,cy-48); g.lineTo(cx+74,cy+48); g.stroke();
+  g.fillStyle='rgba(255,255,255,.95)'; g.font='bold 15px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('操　場',cx,y1+21);
+}
+const COURTS=BLD.filter(b=>b.k==='dome'||b.k==='gym');
+function drawCourts(g){ // 光電球場屋頂下的球場
+  for(const B of COURTS){
+    const x=B.x1*TS, y=B.y1*TS, w=(B.x2-B.x1+1)*TS, h=(B.y2-B.y1+1)*TS;
+    g.lineWidth=2; g.strokeStyle=OL; rr(g,x+4,y+4,w-8,h-8,4,'#4f80d4');
+    if(B.k==='dome'){ // 兩面全場籃球場（直向並排）
+      const cw=(w-30)/2, ch=h-20;
+      drawBasketball(g,x+10,y+10,cw,ch); drawBasketball(g,x+20+cw,y+10,cw,ch);
+    } else { // 南邊：上面半面籃球場，下面兩面匹克球場（直向）
+      const hb=Math.round(h*.42);
+      drawHalfBasketball(g,x+10,y+10,w-20,hb-14);
+      const ph=(h-hb-20)/2;   // 兩面橫向匹克球場，上下排列
+      drawPickleball(g,x+10,y+hb,w-20,ph); drawPickleball(g,x+10,y+hb+ph+10,w-20,ph);
+    }
+    g.fillStyle='rgba(20,30,40,.22)'; g.fillRect(x,y,w,h); // 屋頂的陰影
+    g.strokeStyle=OL; g.lineWidth=1.5;
+    for(const [px,py] of [[x+2,y+2],[x+w-10,y+2],[x+2,y+h-10],[x+w-10,y+h-10],[x+w/2-4,y+2],[x+w/2-4,y+h-10]]) rr(g,px,py,8,8,1,'#b8bcc2');
+  }
+}
+function drawBasketball(g,x,y,w,h){
+  const cx=x+w/2;
+  g.fillStyle='#4f80d4'; g.fillRect(x,y,w,h);                // 球場（藍色地板）
+  const kw=w*.34, kd=h*.2;
+  g.fillStyle='#c9474b'; g.fillRect(cx-kw/2,y,kw,kd); g.fillRect(cx-kw/2,y+h-kd,kw,kd); // 禁區
+  g.strokeStyle='#fff'; g.lineWidth=2;
+  g.strokeRect(x,y,w,h);
+  g.beginPath(); g.moveTo(x,y+h/2); g.lineTo(x+w,y+h/2); g.stroke();       // 中線
+  g.beginPath(); g.arc(cx,y+h/2,w*.14,0,7); g.stroke();                     // 中圈
+  g.strokeRect(cx-kw/2,y,kw,kd); g.strokeRect(cx-kw/2,y+h-kd,kw,kd);
+  g.beginPath(); g.arc(cx,y+kd,kw/2,0,Math.PI); g.stroke();                 // 罰球圈
+  g.beginPath(); g.arc(cx,y+h-kd,kw/2,Math.PI,0); g.stroke();
+  const hy1=y+h*.06, hy2=y+h-h*.06, R3=w*.44;                               // 三分線
+  g.beginPath(); g.moveTo(x+w*.06,y); g.lineTo(x+w*.06,hy1); g.arc(cx,hy1,R3,Math.PI,0,true); g.lineTo(x+w*.94,y); g.stroke();
+  g.beginPath(); g.moveTo(x+w*.06,y+h); g.lineTo(x+w*.06,hy2); g.arc(cx,hy2,R3,Math.PI,0,false); g.lineTo(x+w*.94,y+h); g.stroke();
+  for(const [hy,d] of [[hy1,-1],[hy2,1]]){                                  // 籃板與籃框
+    g.fillStyle='#fff'; g.fillRect(cx-10,hy+d*5-1.5,20,3);
+    g.strokeStyle='#ff7a1a'; g.lineWidth=2; g.beginPath(); g.arc(cx,hy,4,0,7); g.stroke(); g.strokeStyle='#fff';
+  }
+}
+function drawHalfBasketball(g,x,y,w,h){ // 籃框在上方
+  const cx=x+w/2, kw=w*.34, kd=h*.45, hy=y+h*.12;
+  g.fillStyle='#c9474b'; g.fillRect(cx-kw/2,y,kw,kd);
+  g.strokeStyle='#fff'; g.lineWidth=2; g.strokeRect(x,y,w,h); g.strokeRect(cx-kw/2,y,kw,kd);
+  g.beginPath(); g.arc(cx,y+kd,kw/2,0,Math.PI); g.stroke();                       // 罰球圈
+  g.beginPath(); g.moveTo(x+w*.08,y); g.lineTo(x+w*.08,hy); g.arc(cx,hy,w*.42,Math.PI,0,true); g.lineTo(x+w*.92,y); g.stroke(); // 三分線
+  g.beginPath(); g.arc(cx,y+h,w*.14,Math.PI,0); g.stroke();                       // 半場中圈
+  g.fillStyle='#fff'; g.fillRect(cx-10,hy-6,20,3);
+  g.strokeStyle='#ff7a1a'; g.lineWidth=2; g.beginPath(); g.arc(cx,hy,4,0,7); g.stroke();
+}
+function drawPickleball(g,x,y,w,h){ // 橫向匹克球場：中間球網（直的）、兩側廚房區（非截擊區）
+  const cy=y+h/2, nx=x+w/2, kz=w*.16;
+  g.fillStyle='#4f80d4'; g.fillRect(x,y,w,h);          // 藍色地板
+  g.fillStyle='#3f9a6a'; g.fillRect(nx-kz,y,kz*2,h);   // 綠色廚房區
+  g.strokeStyle='#fff'; g.lineWidth=2; g.strokeRect(x,y,w,h);
+  g.beginPath(); g.moveTo(nx-kz,y); g.lineTo(nx-kz,y+h); g.moveTo(nx+kz,y); g.lineTo(nx+kz,y+h);
+  g.moveTo(x,cy); g.lineTo(nx-kz,cy); g.moveTo(nx+kz,cy); g.lineTo(x+w,cy); g.stroke();
+  g.strokeStyle='#2b2233'; g.lineWidth=3; g.beginPath(); g.moveTo(nx,y-3); g.lineTo(nx,y+h+3); g.stroke(); // 球網
+  g.fillStyle='#ddd'; g.fillRect(nx-2,y-5,4,3); g.fillRect(nx-2,y+h+2,4,3);
+}
+const STAGE=BLD.find(b=>b.k==='stage');
+function drawStageRoof(g){ // 司令台屋頂：站上去時變半透明
+  const on=tileAt(PL.x,PL.y)==='Q', x=24*TS-6, y=11*TS-16, w=6*TS+12, h=3*TS;
+  g.save(); g.globalAlpha=on?.3:1; g.lineWidth=2; g.strokeStyle=OL;
+  for(const px of [24*TS+2,30*TS-8]) rr(g,px,y+h-4,6,TS+8,1,'#8a7d68');          // 前方柱子
+  g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(x+6,y+h,w-12,6);
+  rr(g,x,y,w,h,4,'#d24a3d');
+  g.fillStyle='#b83b2f'; for(let i=8;i<h-6;i+=8) g.fillRect(x+3,y+i,w-6,2);
+  g.fillStyle='#e8705f'; g.fillRect(x+3,y+3,w-6,3);
+  g.fillStyle='#f4c542'; g.fillRect(x,y+h-7,w,4);
+  g.restore();
+}
+function drawCanopy(g,B){ // 光電球場屋頂（畫在人物上面；主角在下面時變半透明）
+  if(B.k==='stage'){ drawStageRoof(g); return; }
+  const inside=PL.x>=B.x1&&PL.x<=B.x2&&PL.y>=B.y1&&PL.y<=B.y2;
+  const x=B.x1*TS, y=B.y1*TS-12, w=(B.x2-B.x1+1)*TS, h=(B.y2-B.y1+1)*TS;
+  g.save(); g.globalAlpha=inside?.28:1;
+  g.lineWidth=2; g.strokeStyle=OL; rr(g,x,y,w,h,2,'#3e5f58');
+  for(let ty=B.y1;ty<=B.y2;ty++) for(let tx=B.x1+1;tx<B.x2;tx++){ if((tx-B.x1)%4===0) continue; const X=tx*TS, Y=ty*TS-12;
+    g.fillStyle='#22324d'; g.fillRect(X+2,Y+3,TS-4,TS-6); g.fillStyle='#4a6ea8'; for(let i=0;i<3;i++) g.fillRect(X+3+i*9,Y+4,8,TS-8);
+    g.fillStyle='rgba(255,255,255,'+(.15+.1*Math.sin(gT*2+tx))+')'; g.fillRect(X+4,Y+5,6,3); }
+  g.fillStyle='#e3c93e'; for(let tx=B.x1;tx<=B.x2+1;tx+=4) g.fillRect(Math.min(tx*TS,x+w-3),y,3,h);
+  g.fillRect(x,y,w,3); g.fillRect(x,y+h-3,w,3); g.fillRect(x,y,3,h); g.fillRect(x+w-3,y,3,h);
+  g.restore();
+}
+function drawShadows(g){
+  for(let y=1;y<MH;y++) for(let x=0;x<MW;x++){ const c=MAP[y][x]; if(isWall(c)) continue; const X=x*TS, Y=y*TS;
+    if(isWall(MAP[y-1][x])){ const gr=g.createLinearGradient(0,Y,0,Y+10); gr.addColorStop(0,'rgba(30,20,40,.32)'); gr.addColorStop(1,'rgba(30,20,40,0)'); g.fillStyle=gr; g.fillRect(X,Y,TS,10); }
+    if(x>0&&isWall(MAP[y][x-1])){ const gr=g.createLinearGradient(X,0,X+8,0); gr.addColorStop(0,'rgba(30,20,40,.25)'); gr.addColorStop(1,'rgba(30,20,40,0)'); g.fillStyle=gr; g.fillRect(X,Y,8,TS); } }
+}
+(function prerender(){
+  const g=mapCv.getContext('2d'); g.lineJoin='round';
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) drawGround(g,x,y);
+  drawPlayground(g); drawCourts(g);
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++) drawStatic(g,MAP[y][x],x,y);
+  drawShadows(g);
+  plaque(g,'安翠樓',19.5*TS,8*TS+20); plaque(g,'幼兒園',4.5*TS,15*TS+20); plaque(g,'南耘樓',15*TS,15*TS+20); plaque(g,'北邊光電球場',35*TS,15*TS+8); plaque(g,'南邊光電球場',37*TS,35*TS+4);
+  plaque(g,'落葉回收區',40.5*TS,2*TS+4); plaque(g,'校園菜圃',5.5*TS,25*TS-8); plaque(g,'小孔廟園區',12*TS,26*TS+6); plaque(g,'司令台',25*TS,14*TS+22); plaque(g,'榕樹區',45*TS+16,16*TS+10);
+  plaque(g,'溪畔步道',51*TS,24*TS+16); plaque(g,'北門（後門）',17*TS,1*TS+12); plaque(g,'廚房',36*TS,5*TS+22); plaque(g,'南大門',17.5*TS,35*TS+16);
+  plaque(g,SCHOOL_NAME,9*TS,36*TS+16,true);
+  const m=miniCv.getContext('2d');
+  const MC={'.':'#86c96e','_':'#e6d6b0','g':'#e6d6b0','=':'#4f525a','z':'#d8d8d8','t':'#c9573f','W':'#3f97d6','T':'#3d8a43','m':'#4d9a45','G':'#2f7a35','F':'#f29ab5','f':'#f4f4f4','y':'#d7a25a','v':'#8a5a34','K':'#c94a3a','C':'#34425a','R':'#3c7fd0',',':'#e2b77e','k':'#c58d50','D':'#e2b77e'};
+  for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ const c=MAP[y][x], b=bldAt(x,y);
+    m.fillStyle = isWall(c) ? (b.roof==='solar'?'#33425b':b.roof==='glass'?'#3e5f58':b.roof) : (MC[c]||'#86c96e');
+    if(b && b.k==='antsui' && isWall(c)) m.fillStyle='#b3a893';
+    m.fillRect(x*MS,y*MS,MS,MS); }
+})();
+
+/* ---------------- 立體道具（依深度排序） ---------------- */
+const PROPS=[];
+for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ const c=MAP[y][x]; if(c==='T'||c==='m'||c==='P'||c==='L') PROPS.push({c,x,y,py:y*TS}); }
+PROPS.push({c:'G',x:46,y:10,py:11*TS});
+PROPS.push({c:'K',x:11,y:22,py:23*TS});
+PROPS.push({c:'pillar',x:15,y:1,py:1*TS},{c:'pillar',x:18,y:1,py:1*TS},{c:'pillar',x:15,y:35,py:35*TS},{c:'pillar',x:19,y:35,py:35*TS});
+// 升級物件：買了才出現（位置＝格子座標）
+const UP_SPOTS={ led:[[16,11],[22,11]], bike:[[13,34],[14,34]], rain:[[49,25]], comp:[[44,3]], tree:[[8,24],[11,27],[4,28],[2,23]] };
+function upSolid(){ const s=new Set(); if(!S) return s;
+  for(const k of ['led','bike','rain','comp']) if(upCount(k)) UP_SPOTS[k].forEach(([x,y])=>s.add(x+','+y));
+  UP_SPOTS.tree.slice(0,upCount('tree')).forEach(([x,y])=>s.add(x+','+y));
+  return s; }
+let UPS=new Set();
+function drawTree(g,X,Y,seedX,seedY,scale){
+  g.save(); if(scale&&scale!==1){ g.translate(X+16,Y+30); g.scale(scale,scale); g.translate(-(X+16),-(Y+30)); }
+  g.lineWidth=1.5; g.strokeStyle=OL;
+  const sway=Math.sin(gT*1.3+seedX*.7)*1.2;
+  ell(g,X+18,Y+28,13,4.5,'rgba(30,20,40,.25)',false);
+  rr(g,X+12,Y+14,8,16,2,'#80522b'); g.fillStyle='#996535'; g.fillRect(X+13.5,Y+16,2,12);
+  const v=hash(seedX,seedY,3), c1=v>.5?'#2f8a3c':'#3a9446', c2=v>.5?'#43a64f':'#4fb35a';
+  circ(g,X+16+sway,Y+6,14,c1); circ(g,X+8+sway,Y+10,8,c1); circ(g,X+24+sway,Y+10,8,c1);
+  g.fillStyle=c2; g.beginPath(); g.arc(X+13+sway,Y+3,9,0,7); g.fill();
+  g.fillStyle='#6cc96a'; g.beginPath(); g.arc(X+10+sway,Y,4,0,7); g.fill();
+  g.fillStyle='rgba(255,255,255,.35)'; g.beginPath(); g.arc(X+8.5+sway,Y-1.5,1.6,0,7); g.fill();
+  g.restore();
+}
+function drawProp(g,p){
+  const X=p.x*TS, Y=p.y*TS; g.lineWidth=1.5; g.strokeStyle=OL;
+  if(p.c==='T'){ drawTree(g,X,Y,p.x,p.y); return; }
+  if(p.c==='sap'){ drawTree(g,X,Y,p.x,p.y,.85); return; }
+  if(p.c==='K'){ // 小孔廟（佔 2×2 格）
+    ell(g,X+32,Y+63,38,6,'rgba(30,20,40,.25)',false);
+    g.lineWidth=1.5; g.strokeStyle=OL;
+    rr(g,X-4,Y+54,72,9,2,'#bdb6a8');
+    // 紅磚牆
+    rr(g,X+3,Y+22,58,34,1,'#c94a3a');
+    g.strokeStyle='rgba(255,230,220,.45)'; g.lineWidth=.8;
+    for(let r=0;r<7;r++){ const yy=Y+25+r*4.6; g.beginPath(); g.moveTo(X+8,yy); g.lineTo(X+56,yy); g.stroke(); for(let c=0;c<6;c++){ const xx=X+10+c*9+(r%2?4.5:0); if(xx<X+56){ g.beginPath(); g.moveTo(xx,yy); g.lineTo(xx,yy+4.6); g.stroke(); } } }
+    g.strokeStyle=OL; g.lineWidth=1.5;
+    // 綠色牆柱＋花鳥彩繪
+    rr(g,X,Y+20,9,37,1,'#2e8b57'); rr(g,X+55,Y+20,9,37,1,'#2e8b57');
+    for(const px of [X+4.5,X+59.5]){ rr(g,px-3.5,Y+24,7,9,1,'#e9f3e6'); g.fillStyle='#e86a8a'; g.beginPath(); g.arc(px,Y+28.5,2,0,7); g.fill(); }
+    // 紅色對聯
+    rr(g,X+13,Y+27,6,26,1,'#d93030'); rr(g,X+45,Y+27,6,26,1,'#d93030');
+    g.fillStyle='#3a1a1a'; for(let i=0;i<5;i++){ g.fillRect(X+15,Y+30+i*5,2,2); g.fillRect(X+47,Y+30+i*5,2,2); }
+    // 藍色雙開門
+    rr(g,X+22,Y+28,20,28,1,'#6f9fc4');
+    rr(g,X+24,Y+31,7,13,1,'#d9e6ee'); rr(g,X+33,Y+31,7,13,1,'#d9e6ee');
+    g.fillStyle='#4f7ea3'; g.fillRect(X+31.5,Y+28,1,28); g.fillStyle='#f4c542'; g.beginPath(); g.arc(X+30,Y+46,1.3,0,7); g.arc(X+34,Y+46,1.3,0,7); g.fill();
+    // 下層屋簷（綠瓦＋藍邊＋紅簷）
+    g.fillStyle='#2f6fb5'; g.fillRect(X-2,Y+17,68,4);
+    g.beginPath(); g.moveTo(X-8,Y+22); g.lineTo(X+72,Y+22); g.lineTo(X+62,Y+6); g.lineTo(X+2,Y+6); g.closePath(); g.fillStyle='#3fa37a'; g.fill(); g.stroke();
+    g.strokeStyle='#7fd0a8'; g.lineWidth=1.6; for(let i=0;i<10;i++){ const t=i/9; g.beginPath(); g.moveTo(X+2+t*60,Y+7); g.lineTo(X-6+t*76,Y+21); g.stroke(); }
+    g.strokeStyle=OL; g.lineWidth=1.5; rr(g,X-9,Y+20,82,4,2,'#d64a3a');
+    // 上層燕尾屋脊
+    g.beginPath(); g.moveTo(X+2,Y+6); g.lineTo(X-4,Y-12); g.quadraticCurveTo(X+32,Y,X+68,Y-12); g.lineTo(X+62,Y+6); g.closePath(); g.fillStyle='#3fa37a'; g.fill(); g.stroke();
+    // 屋脊下的花卉剪黏
+    rr(g,X+12,Y-4,40,9,2,'#b8506a');
+    [['#f4c542',X+17],['#f4a6b8',X+25],['#f4c542',X+32],['#ffffff',X+39],['#f4a6b8',X+46]].forEach(([c,x])=>{ g.fillStyle=c; g.beginPath(); g.arc(x,Y+.5,3,0,7); g.fill(); g.fillStyle='#3d9b48'; g.fillRect(x-4,Y+2,3,1.5); });
+    g.strokeStyle='#d64a3a'; g.lineWidth=3.5; g.beginPath(); g.moveTo(X-6,Y-14); g.quadraticCurveTo(X+32,Y-3,X+70,Y-14); g.stroke();
+    g.fillStyle='#d64a3a'; g.strokeStyle=OL; g.lineWidth=1.2;
+    g.beginPath(); g.moveTo(X-6,Y-14); g.lineTo(X-12,Y-24); g.lineTo(X+1,Y-13); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(X+70,Y-14); g.lineTo(X+76,Y-24); g.lineTo(X+63,Y-13); g.closePath(); g.fill(); g.stroke();
+    return; }
+  if(p.c==='L'){ // 幼兒園溜滑梯
+    ell(g,X+16,Y+29,15,4,'rgba(30,20,40,.25)',false);
+    g.lineWidth=1.5; g.strokeStyle=OL;
+    rr(g,X+3,Y-6,4,34,1,'#3c7fd0'); rr(g,X+14,Y-6,4,34,1,'#3c7fd0');
+    g.strokeStyle='#3c7fd0'; g.lineWidth=2; for(let i=0;i<4;i++){ g.beginPath(); g.moveTo(X+5,Y+i*8); g.lineTo(X+16,Y+i*8); g.stroke(); }
+    g.strokeStyle=OL; g.lineWidth=1.5; rr(g,X+1,Y-10,19,6,2,'#e2574c');
+    g.beginPath(); g.moveTo(X+18,Y-4); g.quadraticCurveTo(X+24,Y+10,X+31,Y+27); g.lineTo(X+25,Y+29); g.quadraticCurveTo(X+19,Y+13,X+14,Y-2); g.closePath(); g.fillStyle='#f2c230'; g.fill(); g.stroke();
+    return; }
+  if(p.c==='P'){ // 旗桿
+    ell(g,X+16,Y+28,12,4,'rgba(30,20,40,.25)',false);
+    rr(g,X+6,Y+20,20,9,2,'#c7c7c7'); rr(g,X+14.5,Y-34,3,56,1,'#e8e8e8'); circ(g,X+16,Y-35,2.5,'#f4c542');
+    // 中華民國國旗：紅底、左上青天、白日十二道光芒（隨風飄）
+    const wv=i=>Math.sin(gT*4+i*.7)*1.8, FW=22, FH=15, sx=X+18, sy=Y-33, n=10, dx=FW/n;
+    const quad=(i0,i1,t0,t1,col)=>{ g.fillStyle=col; g.beginPath();
+      for(let i=i0;i<=i1;i++) g.lineTo(sx+i*dx,sy+t0+wv(i)); for(let i=i1;i>=i0;i--) g.lineTo(sx+i*dx,sy+t1+wv(i)); g.closePath(); g.fill(); };
+    quad(0,n,0,FH,'#e60012');
+    quad(0,n/2,0,FH/2,'#0b2a8f');
+    const cx=sx+FW/4, cy=sy+FH/4+wv(n/4);
+    g.fillStyle='#fff'; g.beginPath(); for(let k=0;k<24;k++){ const a=k/24*Math.PI*2-Math.PI/2, r=k%2?2:3.6; g.lineTo(cx+Math.cos(a)*r,cy+Math.sin(a)*r); } g.closePath(); g.fill();
+    g.fillStyle='#0b2a8f'; g.beginPath(); g.arc(cx,cy,1.6,0,7); g.fill(); g.fillStyle='#fff'; g.beginPath(); g.arc(cx,cy,1.25,0,7); g.fill();
+    g.strokeStyle=OL; g.lineWidth=1.2; g.beginPath(); for(let i=0;i<=n;i++) g.lineTo(sx+i*dx,sy+wv(i)); for(let i=n;i>=0;i--) g.lineTo(sx+i*dx,sy+FH+wv(i)); g.closePath(); g.stroke();
+    return; }
+  if(p.c==='m'){ // 椰子樹
+    ell(g,X+18,Y+28,10,3.5,'rgba(30,20,40,.25)',false);
+    g.strokeStyle='#8a5a2b'; g.lineWidth=5; g.beginPath(); g.moveTo(X+16,Y+28); g.quadraticCurveTo(X+19,Y+12,X+16,Y-4); g.stroke();
+    g.strokeStyle='#6d4520'; g.lineWidth=1; for(let i=0;i<5;i++){ g.beginPath(); g.moveTo(X+13.5,Y+24-i*6); g.lineTo(X+19,Y+22-i*6); g.stroke(); }
+    const sw=Math.sin(gT*1.5+p.y)*1.5;
+    for(let k=0;k<7;k++){ const a=-Math.PI/2+(k-3)*0.55; g.strokeStyle=k%2?'#2f8a3c':'#4fb35a'; g.lineWidth=4; g.lineCap='round';
+      g.beginPath(); g.moveTo(X+16,Y-4); g.quadraticCurveTo(X+16+Math.cos(a)*10+sw,Y-4+Math.sin(a)*10-4,X+16+Math.cos(a)*18+sw,Y-4+Math.sin(a)*14+6); g.stroke(); }
+    circ(g,X+16,Y-4,3,'#8a5a2b'); return; }
+  if(p.c==='G'){ // 大榕樹（2×2）
+    ell(g,X+34,Y+62,34,10,'rgba(30,20,40,.25)',false);
+    g.strokeStyle='#6d4520'; g.lineWidth=1.2; for(let i=0;i<7;i++){ g.beginPath(); g.moveTo(X+10+i*8,Y+20); g.lineTo(X+12+i*8+Math.sin(i)*2,Y+58); g.stroke(); }
+    rr(g,X+24,Y+28,16,34,4,'#80522b');
+    g.strokeStyle=OL; g.lineWidth=1.5;
+    const sw=Math.sin(gT*1.1)*1.2;
+    for(const [dx,dy,r,cl] of [[32,10,24,'#2a7a35'],[12,20,15,'#2f8a3c'],[52,20,15,'#2f8a3c'],[20,2,14,'#3a9446'],[44,2,14,'#3a9446'],[32,-6,13,'#43a64f']]) circ(g,X+dx+sw,Y+dy,r,cl);
+    g.fillStyle='#6cc96a'; g.beginPath(); g.arc(X+24+sw,Y-6,5,0,7); g.arc(X+40+sw,Y-2,4,0,7); g.fill(); return; }
+  if(p.c==='pillar'){ g.fillStyle='rgba(30,20,40,.25)'; g.fillRect(X+6,Y+26,24,5); rr(g,X+5,Y-14,22,42,2,'#c8553d'); g.fillStyle='#a8432f'; for(let i=0;i<5;i++) g.fillRect(X+6,Y-8+i*8,20,1.5); rr(g,X+2,Y-20,28,8,2,'#e8dcc0'); circ(g,X+16,Y-25,5,'#7ed957'); return; }
+  if(p.c==='led'){ ell(g,X+16,Y+28,7,2.5,'rgba(30,20,40,.25)',false); rr(g,X+14,Y-14,4,42,1,'#6d7178'); rr(g,X+6,Y-22,20,8,3,'#555');
+    const gl=.55+.25*Math.sin(gT*3); g.fillStyle=`rgba(255,250,200,${gl})`; g.beginPath(); g.ellipse(X+16,Y-12,9,4,0,0,7); g.fill(); g.fillStyle='#fffbe0'; g.fillRect(X+9,Y-15,14,3); return; }
+  if(p.c==='bike'){ g.fillStyle='rgba(0,0,0,.15)'; g.fillRect(X+2,Y+25,28,4);
+    g.strokeStyle='#555'; g.lineWidth=2; g.beginPath(); g.arc(X+9,Y+20,6,0,7); g.arc(X+24,Y+20,6,0,7); g.stroke();
+    g.strokeStyle=p.x%2?'#e2574c':'#3c7fd0'; g.lineWidth=2.5; g.beginPath(); g.moveTo(X+9,Y+20); g.lineTo(X+15,Y+11); g.lineTo(X+24,Y+20); g.moveTo(X+15,Y+11); g.lineTo(X+22,Y+11); g.lineTo(X+24,Y+20); g.moveTo(X+22,Y+11); g.lineTo(X+21,Y+7); g.stroke(); return; }
+  if(p.c==='rain'){ ell(g,X+16,Y+28,11,3.5,'rgba(30,20,40,.25)',false); rr(g,X+6,Y+6,20,22,4,'#3c7fd0'); g.fillStyle='#2a64a8'; g.fillRect(X+6,Y+12,20,2); g.fillRect(X+6,Y+20,20,2);
+    ell(g,X+16,Y+6,10,3.5,'#7fc3ef'); g.fillStyle='#fff'; g.font='bold 9px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('雨水',X+16,Y+17); return; }
+  if(p.c==='comp'){ g.fillStyle='rgba(0,0,0,.18)'; g.fillRect(X+3,Y+26,28,4); rr(g,X+3,Y+8,26,20,2,'#8a5a2b'); g.fillStyle='#6d4520'; for(let i=0;i<3;i++) g.fillRect(X+3,Y+12+i*5,26,1.5);
+    rr(g,X+2,Y+4,28,6,2,'#5d8b4f'); g.fillStyle='#fff'; g.font='bold 9px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('堆肥',X+16,Y+19); return; }
+}
+function drawSolarUpgrade(g,k){ // 在屋頂畫太陽能板（南北兩座光電球場本來就有；升級後廚房也加裝）
+  const B=BLD.find(b=>b.k===k);
+  for(let y=B.y1;y<B.y2;y++) for(let x=B.x1+1;x<B.x2;x++){ if((x-B.x1)%4===0) continue; const X=x*TS, Y=y*TS;
+    g.fillStyle='#22324d'; g.fillRect(X+2,Y+3,TS-4,TS-6); g.fillStyle='#4a6ea8'; for(let i=0;i<3;i++) g.fillRect(X+3+i*9,Y+4,8,TS-8);
+    g.fillStyle='rgba(255,255,255,'+(.15+.1*Math.sin(gT*2+x))+')'; g.fillRect(X+4,Y+5,6,3); }
+}
+
+/* ---------------- 角色 ---------------- */
+const LOOKS=[
+  {skin:'#f6d2b0',hair:'#3b2a1a',shirt:'#3c8de0',pants:'#2c3e60'},
+  {skin:'#f6d2b0',hair:'#3b2a1a',shirt:'#e86a9a',pants:'#4a3060',long:true},
+  {skin:'#e8b98f',hair:'#1f1f1f',shirt:'#3cb371',pants:'#3a3a3a',hstyle:'spiky'},
+  {skin:'#f3c9a2',hair:'#6b3e1e',shirt:'#f0a030',pants:'#6b4a2a',hstyle:'pony'}
+];
+function drawItem(g,it,hx,hy,cx,by,side){
+  g.save(); g.lineWidth=1.2; g.strokeStyle=OL;
+  if(it==='flag'){ const fx=hx+(side?11:5), fy=hy-(side?16:19);
+    g.strokeStyle='#6d4520'; g.lineWidth=1.6; g.beginPath(); g.moveTo(hx,hy+2); g.lineTo(fx-.5,fy+4); g.stroke(); g.strokeStyle=OL; g.lineWidth=1.2;
+    g.beginPath(); for(let i=0;i<8;i++){ const a=Math.PI/8+i*Math.PI/4; g.lineTo(fx+Math.cos(a)*5.5,fy+Math.sin(a)*5.5); } g.closePath(); g.fillStyle='#e23b3b'; g.fill(); g.stroke(); g.fillStyle='#fff'; g.fillRect(fx-3,fy-.8,6,1.6); }
+  else if(it==='leaf'){ g.fillStyle='#4fb35a'; g.beginPath(); g.ellipse(hx+2,hy-4,3.5,6,.5,0,7); g.fill(); g.stroke(); }
+  else if(it==='drop'){ g.fillStyle='#4aa3d8'; g.beginPath(); g.moveTo(hx+1,hy-10); g.quadraticCurveTo(hx+6,hy-2,hx+1,hy+1); g.quadraticCurveTo(hx-4,hy-2,hx+1,hy-10); g.fill(); g.stroke(); }
+  else if(it==='bulb'){ circ(g,hx+1,hy-6,4,'#ffe066'); rr(g,hx-1,hy-3,4,3,1,'#999'); }
+  else if(it==='sun'){ circ(g,hx+1,hy-6,4,'#ffb52e'); }
+  else if(it==='veg'){ circ(g,hx+1,hy-4,4,'#7ed957'); }
+  else if(it==='can'){ rr(g,hx-2,hy-8,6,9,1,'#3c7fd0'); }
+  g.restore();
+}
+const BLINK=new WeakMap();
+function drawPerson(g,x,y,dir,L,step,still){
+  const cx=x+16; if(!BLINK.has(L)) BLINK.set(L,Math.random()*5);
+  const blink=!still&&(gT+BLINK.get(L))%4.3<.13;
+  g.save(); g.lineWidth=1.4; g.strokeStyle=OL; g.lineJoin='round'; g.lineCap='round';
+  ell(g,cx,y+29,9,3.2,'rgba(30,20,40,.28)',false);
+  if(dir==='left'){ g.translate(2*cx,0); g.scale(-1,1); dir='right'; }
+  const side=dir==='right', by=y+(step?-1:0), shoe='#3b3044', HS=1.22;
+  const headOn=()=>{ g.save(); g.translate(cx,by+5.2); g.scale(HS,HS); g.translate(-cx,-(by+4.5)); g.lineWidth=1.4/HS*1.1; };
+  if(L.long&&dir!=='up'){ headOn(); if(side) rr(g,cx-9.6,by+1.5,11,14.5,5,L.hair); else rr(g,cx-8.8,by+1,17.6,15,6,L.hair); g.restore(); }
+  if(L.hstyle==='pony'&&dir!=='up'){ headOn(); g.fillStyle=L.hair; g.beginPath();
+    if(side){ g.moveTo(cx-6,by+1); g.quadraticCurveTo(cx-15,by+3,cx-12,by+14); g.quadraticCurveTo(cx-9,by+9,cx-5,by+6); } else { g.moveTo(cx+5,by-1); g.quadraticCurveTo(cx+15,by+1,cx+12,by+13); g.quadraticCurveTo(cx+10,by+7,cx+5,by+5); }
+    g.closePath(); g.fill(); g.stroke(); g.restore(); }
+  const l1=step===1?3.5:5, l2=step===2?3.5:5, lx1=side?cx-4:cx-5, lx2=side?cx:cx+1;
+  rr(g,lx1,by+22.5,4,l1,1,L.pants); rr(g,lx2,by+22.5,4,l2,1,L.pants);
+  rr(g,lx1-(side?0:.8),by+21.8+l1,side?6.5:5.6,3.6,1.8,shoe); rr(g,lx2-(side?0:.8),by+21.8+l2,side?6.5:5.6,3.6,1.8,shoe);
+  const sw=step?(step===1?1.6:-1.6):0;
+  if(!side){ rr(g,cx-10,by+15+sw,3.8,6.5,1.8,L.shirt); circ(g,cx-8.1,by+21.7+sw,2.1,L.skin); rr(g,cx+6.2,by+15-sw,3.8,6.5,1.8,L.shirt); circ(g,cx+8.1,by+21.7-sw,2.1,L.skin); }
+  rr(g,cx-6.6,by+14,13.2,9.5,4.5,L.shirt);
+  g.fillStyle=darken(L.shirt,.2); g.fillRect(cx-6,by+20.6,12,2.2);
+  g.fillStyle='rgba(255,255,255,.25)'; g.fillRect(cx-4.6,by+15.6,3.4,1.8);
+  if(L.vest){ g.fillStyle=L.vest; g.fillRect(cx-6,by+15,12,7.6); g.fillStyle='#fff'; g.fillRect(cx-6,by+18.4,12,1.8); g.beginPath(); g.roundRect(cx-6.6,by+14,13.2,9.5,4.5); g.stroke(); }
+  if(L.tie&&dir==='down'){ g.fillStyle=L.tie; g.beginPath(); g.moveTo(cx-1.5,by+14.6); g.lineTo(cx+1.5,by+14.6); g.lineTo(cx+1,by+20); g.lineTo(cx,by+21.4); g.lineTo(cx-1,by+20); g.closePath(); g.fill(); }
+  if(side){ rr(g,cx-2+sw*.8,by+15,3.8,6.5,1.8,L.shirt); circ(g,cx+sw*.8,by+21.7,2.1,L.skin); }
+  if(L.item&&dir!=='up') drawItem(g,L.item,side?cx+sw*.8:cx+8.1,by+21.7-(side?0:sw),cx,by,side);
+  headOn();
+  circ(g,cx,by+4.5,8.5,L.skin);
+  g.fillStyle=L.hair;
+  if(dir==='up'){ circ(g,cx,by+4.2,9,L.hair); if(L.long) rr(g,cx-7,by+8,14,8,4,L.hair); }
+  else if(dir==='down'){ g.beginPath(); g.moveTo(cx-9,by+7); g.arc(cx,by+4.2,9,Math.PI,0); g.lineTo(cx+9,by+7); g.quadraticCurveTo(cx+5,by+1.5,cx+1,by+3.5); g.quadraticCurveTo(cx-4,by+.5,cx-9,by+7); g.closePath(); g.fill(); g.stroke(); }
+  else { g.beginPath(); g.moveTo(cx-9,by+10); g.arc(cx,by+4.2,9,Math.PI,0); g.lineTo(cx+9,by+4); g.quadraticCurveTo(cx+3,by+1.5,cx-2,by+5); g.lineTo(cx-3,by+10); g.closePath(); g.fill(); g.stroke(); }
+  if(L.bald){ g.fillStyle=L.skin; g.beginPath(); g.ellipse(cx,by-.5,5.5,4,0,Math.PI,0); g.fill(); }
+  if(L.hstyle==='spiky'){ g.fillStyle=L.hair; g.beginPath();
+    for(const [a0,len] of [[-2.6,4],[-2.05,5],[-1.5,5.5],[-.95,5],[-.45,4]]){ const r=8.6, x0=cx+Math.cos(a0-.22)*r, y0=by+4.2+Math.sin(a0-.22)*r, x1=cx+Math.cos(a0+.22)*r, y1=by+4.2+Math.sin(a0+.22)*r; g.moveTo(x0,y0); g.lineTo(cx+Math.cos(a0)*(r+len),by+4.2+Math.sin(a0)*(r+len)); g.lineTo(x1,y1); }
+    g.fill(); g.stroke(); }
+  if(L.hstyle==='bun'){ circ(g,cx,by-5.2,4.2,L.hair); }
+  if(L.hstyle==='pony'&&dir==='up'){ g.fillStyle=L.hair; g.beginPath(); g.moveTo(cx-2.5,by+5); g.quadraticCurveTo(cx-4,by+13,cx,by+16); g.quadraticCurveTo(cx+4,by+13,cx+2.5,by+5); g.closePath(); g.fill(); g.stroke(); }
+  if(L.hstyle==='pony'){ circ(g,dir==='up'?cx:side?cx-6.5:cx+6,by+(dir==='up'?5:2),1.6,'#ff6b8a'); }
+  if(L.bow&&dir!=='up'){ const bx=side?cx-1:cx+5, bY=by-1.5; g.fillStyle='#ff5d8f'; g.beginPath(); g.moveTo(bx,bY); g.lineTo(bx-4.5,bY-3); g.lineTo(bx-4.5,bY+3); g.closePath(); g.moveTo(bx,bY); g.lineTo(bx+4.5,bY-3); g.lineTo(bx+4.5,bY+3); g.closePath(); g.fill(); g.lineWidth=1; g.stroke(); }
+  g.strokeStyle=lighten(L.hair,.4); g.lineWidth=1.5; g.beginPath(); g.arc(cx-1,by+2.5,5.5,Math.PI*1.15,Math.PI*1.45); g.stroke();
+  g.strokeStyle=OL; g.lineWidth=1.25;
+  const eye=(ex,ey)=>{ if(blink){ g.lineWidth=1.1; g.beginPath(); g.moveTo(ex-1.5,ey+.6); g.quadraticCurveTo(ex,ey+1.6,ex+1.5,ey+.6); g.stroke(); return; }
+    g.fillStyle=OL; g.beginPath(); g.ellipse(ex,ey,1.65,2.3,0,0,7); g.fill(); g.fillStyle='#5a4a7a'; g.beginPath(); g.ellipse(ex,ey+1,1.1,1,0,0,7); g.fill();
+    g.fillStyle='#fff'; g.beginPath(); g.arc(ex-.55,ey-.9,.75,0,7); g.fill(); };
+  if(dir==='down'){ eye(cx-3.5,by+7); eye(cx+3.5,by+7); g.fillStyle='rgba(255,110,120,.5)'; g.beginPath(); g.ellipse(cx-5.6,by+9.8,1.9,1.1,0,0,7); g.ellipse(cx+5.6,by+9.8,1.9,1.1,0,0,7); g.fill();
+    g.strokeStyle=darken(L.skin,.5); g.lineWidth=.9; g.beginPath(); g.moveTo(cx-1,by+10.4); g.quadraticCurveTo(cx,by+11.4,cx+1,by+10.4); g.stroke(); }
+  else if(side){ eye(cx+4.3,by+7); g.fillStyle='rgba(255,110,120,.5)'; g.beginPath(); g.ellipse(cx+5.2,by+9.9,1.6,1,0,0,7); g.fill(); }
+  g.strokeStyle=OL; g.lineWidth=1.1;
+  if(L.glasses&&dir!=='up'){ if(dir==='down'){ g.strokeRect(cx-6,by+4.8,5,4.4); g.strokeRect(cx+1,by+4.8,5,4.4); } else g.strokeRect(cx+2,by+4.8,6,4.4); }
+  g.lineWidth=1.25;
+  if(L.hat==='cap'){ g.beginPath(); g.arc(cx,by+3,9,Math.PI,0); g.closePath(); g.fillStyle=L.hatColor; g.fill(); g.stroke(); if(dir==='down') rr(g,cx-8,by+1.5,16,3,1.5,darken(L.hatColor,.12)); else if(side) rr(g,cx+2,by+1,10,3,1.5,darken(L.hatColor,.12)); }
+  if(L.hat==='helmet'){ g.beginPath(); g.arc(cx,by+3.5,10.5,Math.PI,0); g.closePath(); g.fillStyle='#f2c230'; g.fill(); g.stroke(); rr(g,cx-11.5,by+2.5,23,3,1.5,'#d9a810'); }
+  g.restore(); g.restore();
+}
+function drawFace(canvas,L){ const g=canvas.getContext('2d'); g.clearRect(0,0,canvas.width,canvas.height); const s=canvas.width/32; g.save(); g.translate(canvas.width/2-16*s,canvas.height*.22); g.scale(s,s); drawPerson(g,0,0,'down',L,0,true); g.restore(); }
+
+/* ---------------- NPC ---------------- */
+const NPC_LOOK={
+  m1:{skin:'#f6d2b0',hair:'#3b2a1a',shirt:'#f0a030',pants:'#6b4a2a',long:true,glasses:true,item:'bulb'},
+  m2:{skin:'#e8b98f',hair:'#1f1f1f',shirt:'#3cb371',pants:'#3a3a3a',vest:'#7ed957',hstyle:'bun',item:'can'},
+  m3:{skin:'#d9a77c',hair:'#333',shirt:'#3c7fd0',pants:'#2c3e60',vest:'#f2c230',hat:'cap',hatColor:'#f2c230',item:'flag'},
+  m4:{skin:'#f3c9a2',hair:'#6b3e1e',shirt:'#5b8fd6',pants:'#3a3a3a',hat:'helmet',item:'sun'},
+  m5:{skin:'#f6d2b0',hair:'#6b3e1e',shirt:'#2e9d5b',pants:'#6b4a2a',hat:'cap',hatColor:'#2e9d5b',item:'leaf'},
+  m6:{skin:'#d9a77c',hair:'#aaa',shirt:'#8a6a4a',pants:'#4a3a2a',bald:true,item:'leaf'},
+  m7:{skin:'#f6d2b0',hair:'#3b2a1a',shirt:'#ffffff',pants:'#6b8fb8',hstyle:'pony',bow:true,item:'veg'},
+  m8:{skin:'#e8b98f',hair:'#1f1f1f',shirt:'#3fa9d8',pants:'#2c3e60',hstyle:'spiky',item:'drop'},
+  m9:{skin:'#f6d2b0',hair:'#6b3e1e',shirt:'#7ed957',pants:'#4a3a2a',hat:'cap',hatColor:'#5aa04a',item:'leaf'},
+  m10:{skin:'#e8b98f',hair:'#333',shirt:'#3c7fd0',pants:'#2c3e60',glasses:true,tie:'#2a6f8f',item:'drop'},
+  fin:{skin:'#f3c9a2',hair:'#555',shirt:'#3d5a80',pants:'#2c3e60',tie:'#c0392b',glasses:true}
+};
+const NPCS=[];
+function addNPC(o){ o.px=o.x*TS; o.py=o.y*TS; o.dir=o.dir||'down'; o.moving=false; o.wt=1+Math.random()*2; o.step=0; o.anim=0; NPCS.push(o); return o; }
+Object.entries(SPOTS).forEach(([id,s])=>addNPC({id, mission:id, name:s.npc, x:s.tx, y:s.ty, dir:s.dir, look:NPC_LOOK[id]}));
+const WANDER_LOOKS=[{skin:'#f6d2b0',hair:'#3b2a1a',shirt:'#e2574c',pants:'#2c3e60'},{skin:'#e8b98f',hair:'#1f1f1f',shirt:'#9b6bd6',pants:'#3a3a3a',long:true},{skin:'#f3c9a2',hair:'#6b3e1e',shirt:'#f2c230',pants:'#2c3e60',hstyle:'spiky'},{skin:'#f6d2b0',hair:'#3b2a1a',shirt:'#5bc0de',pants:'#4a3060',hstyle:'pony'}];
+const CHAT=['我今天自備水壺喔！💧','下課記得隨手關燈！💡','跑步好舒服～操場的大樹好涼！🌳','我住很近，每天走路上學 🚶','午餐我都吃光光，不浪費！🍚','光電球場的屋頂會發電耶 ☀️'];
+[[26,20,'t'],[36,25,'t'],[9,27,'.'],[40,17,'_']].forEach(([x,y,z],i)=>addNPC({id:'w'+i, name:'同學', x, y, look:WANDER_LOOKS[i], wander:true, zone:z, chat:CHAT[i]}));
+
+/* ---------------- 車輛 ---------------- */
+// 上學時間的車流：家長接送車、校車、公車、計程車、電動車、機車
+const CARS=[];
+const CAR_TYPES=[
+  {c:'#e74c3c',len:56},{c:'#f2c230',len:96,school:true},{c:'#ecf0f1',len:56},{c:'#3c7fd0',len:24,moto:true},
+  {c:'#3498db',len:56},{c:'#2e9d5b',len:96,bus:true},{c:'#f6c445',len:56,taxi:true},{c:'#9be3c4',len:56,ev:true}
+];
+CAR_TYPES.forEach((t,i)=>{ const dir=i%2?-1:1; CARS.push(Object.assign({dir, lane:dir>0?1:0, x:(i>>1)*480+(dir>0?40:260), v:(t.moto?125:t.bus||t.school?85:105)+Math.random()*20, base:0},t)); });
+CARS.forEach(c=>c.base=c.v);
+function laneY(c){ return c.lane ? 39*TS+18 : 37*TS+18; }
+function updateCars(dt){
+  for(const c of CARS){
+    let nx=c.x+c.dir*c.v*dt;
+    for(const o of CARS){ // 保持車距
+      if(o===c||o.lane!==c.lane) continue;
+      if(c.dir>0&&o.x>c.x&&nx+c.len+16>o.x) nx=Math.min(nx,o.x-c.len-16);
+      if(c.dir<0&&o.x<c.x&&nx<o.x+o.len+16) nx=Math.max(nx,o.x+o.len+16);
+    }
+    if(c.dir>0) c.x=Math.max(c.x,nx); else c.x=Math.min(c.x,nx);
+    if(c.dir>0&&c.x>MW*TS+60){ const minX=Math.min(...CARS.filter(o=>o.lane===c.lane&&o!==c).map(o=>o.x)); c.x=Math.min(-c.len-40,minX-c.len-60-Math.random()*220); }
+    if(c.dir<0&&c.x<-c.len-60){ const maxX=Math.max(...CARS.filter(o=>o.lane===c.lane&&o!==c).map(o=>o.x+o.len)); c.x=Math.max(MW*TS+40,maxX+60+Math.random()*220); }
+  }
+}
+function drawCar(g,c){
+  const x=c.x, L=c.len, f=c.dir>0;
+  g.lineWidth=1.5; g.strokeStyle=OL;
+  if(c.moto){ // 機車＋騎士（從上往下看）
+    const y=laneY(c)+4;
+    g.fillStyle='rgba(20,15,30,.28)'; g.beginPath(); g.ellipse(x+L/2+3,y+12,L/2+2,6,0,0,7); g.fill();
+    rr(g,x,y+6,L,8,4,'#2b2b33'); rr(g,x+4,y+4,L-8,12,5,c.c);
+    g.fillStyle='#fff6b0'; g.fillRect(f?x+L-2:x,y+8,2,4);
+    circ(g,x+L/2+(f?-2:2),y+10,5.5,'#f2c230'); g.fillStyle='rgba(255,255,255,.5)'; g.fillRect(x+L/2-3,y+7,4,2); // 安全帽
+    return;
+  }
+  const y=laneY(c), H=c.bus||c.school?28:26;
+  g.fillStyle='rgba(20,15,30,.3)'; g.beginPath(); g.roundRect(x+3,y+5,L,H-2,7); g.fill();
+  g.fillStyle='#1e1e24'; for(const wx of [x+9,x+L-19]){ g.fillRect(wx,y-2,10,4); g.fillRect(wx,y+H-2,10,4); }
+  if(c.bus||c.school){ g.fillRect(x+L/2-5,y-2,10,4); g.fillRect(x+L/2-5,y+H-2,10,4); }
+  rr(g,x,y,L,H,7,c.c);
+  g.fillStyle=lighten(c.c,.3); g.fillRect(x+4,y+2,L-8,3);
+  g.fillStyle=darken(c.c,.18); g.fillRect(x+4,y+H-5,L-8,3);
+  if(c.bus||c.school){
+    g.fillStyle='#bfe6fb'; for(let i=0;i<5;i++) g.fillRect(x+12+i*15,y+5,11,H-10);
+    rr(g,f?x+L-10:x+3,y+4,7,H-8,2,'#9fd3f0');
+    if(c.school){ g.fillStyle='#2b2233'; g.fillRect(x+4,y+H/2-1,L-8,2); rr(g,x+L/2-15,y+H/2-6,30,12,3,'#fff'); g.fillStyle='#c0392b'; g.font='bold 9px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('校　車',x+L/2,y+H/2+.5); }
+    else { rr(g,x+L/2-12,y+H/2-6,24,12,3,'#fff'); g.fillStyle='#2e7d4f'; g.font='bold 9px "Microsoft JhengHei",sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('公車',x+L/2,y+H/2+.5); }
+  } else {
+    rr(g,x+(f?14:12),y+4,L-28,18,4,lighten(c.c,.12));
+    g.fillStyle='#9fd3f0';
+    if(f){ g.fillRect(x+L-15,y+5,6,16); g.fillRect(x+9,y+6,4,14); } else { g.fillRect(x+9,y+5,6,16); g.fillRect(x+L-13,y+6,4,14); }
+    g.fillStyle='rgba(255,255,255,.55)'; g.fillRect(f?x+L-14:x+10,y+7,2,5);
+    if(c.taxi){ rr(g,x+L/2-6,y+9,12,8,1,'#fff'); g.fillStyle=OL; g.font='bold 7px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('TAXI',x+L/2,y+13.5); }
+    if(c.ev){ circ(g,x+L/2,y+13,5.5,'#fff'); g.fillStyle='#2e9d5b'; g.font='bold 9px sans-serif'; g.textAlign='center'; g.textBaseline='middle'; g.fillText('⚡',x+L/2,y+13.5); }
+  }
+  g.fillStyle='#fff6b0'; if(f){ g.fillRect(x+L-3,y+3,3,5); g.fillRect(x+L-3,y+H-8,3,5); } else { g.fillRect(x,y+3,3,5); g.fillRect(x,y+H-8,3,5); }
+  g.fillStyle='#ff5a5a'; if(f){ g.fillRect(x,y+4,2,4); g.fillRect(x,y+H-8,2,4); } else { g.fillRect(x+L-2,y+4,2,4); g.fillRect(x+L-2,y+H-8,2,4); }
+}
+
+/* ---------------- 主角與移動 ---------------- */
+const PL={x:17,y:33,px:17*TS,py:33*TS,dir:'up',moving:false,step:0,anim:0,look:LOOKS[0],path:null,goal:null};
+const DIRS={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]};
+function occupied(x,y,except){
+  if(except!==PL && PL.x===x && PL.y===y) return true;
+  return NPCS.some(n=>n!==except && n.x===x && n.y===y);
+}
+// 上學時間：校門（北門、南大門）和圍牆外都不能去
+const isGate=(x,y)=>tileAt(x,y)==='g'||y>=35;
+let gateWarnT=-1e9;
+function gateWarn(){ const now=performance.now(); if(now-gateWarnT>2500){ gateWarnT=now; toast('🏫 現在是上課時間，不可以離開校園喔！'); } }
+function passable(x,y){ return !SOLID.has(tileAt(x,y)) && !UPS.has(x+','+y) && !isGate(x,y); }
+function npcAt(x,y){ return NPCS.find(n=>n.x===x&&n.y===y); }
+// 司令台是高台：只能從樓梯（U）上下，不能從旁邊跳下去
+function canMove(fx,fy,tx,ty){ const a=tileAt(fx,fy), b=tileAt(tx,ty); if((a==='Q')!==(b==='Q')) return a==='U'||b==='U'; return true; }
+function tryStep(dir){
+  PL.dir=dir; const [dx,dy]=DIRS[dir], nx=PL.x+dx, ny=PL.y+dy;
+  if(isGate(nx,ny)){ gateWarn(); return false; }
+  if(!passable(nx,ny) || !canMove(PL.x,PL.y,nx,ny) || occupied(nx,ny,PL)) return false;
+  PL.x=nx; PL.y=ny; PL.moving=true; return true;
+}
+function bfs(sx,sy,isGoal){
+  const prev=new Int32Array(MW*MH).fill(-2), q=[sy*MW+sx]; prev[q[0]]=-1;
+  for(let h=0;h<q.length;h++){ const c=q[h], x=c%MW, y=(c/MW)|0;
+    if(isGoal(x,y)){ const path=[]; for(let k=c;prev[k]!==-1;k=prev[k]) path.push([k%MW,(k/MW)|0]); return path.reverse(); }
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){ const X=x+dx, Y=y+dy; if(X<0||Y<0||X>=MW||Y>=MH) continue; const n=Y*MW+X;
+      if(prev[n]!==-2 || !passable(X,Y) || !canMove(x,y,X,Y) || (occupied(X,Y,PL) && !isGoal(X,Y))) continue; prev[n]=c; q.push(n); } }
+  return null;
+}
+function dirTo(a,b){ const dx=b.x-a.x, dy=b.y-a.y; return Math.abs(dx)>=Math.abs(dy)?(dx>0?'right':'left'):(dy>0?'down':'up'); }
+function walkToNpc(n){
+  const adj=(x,y)=>Math.abs(x-n.x)+Math.abs(y-n.y)===1;
+  if(adj(PL.x,PL.y)){ PL.dir=dirTo(PL,n); talkTo(n); return; }
+  const p=bfs(PL.x,PL.y,(x,y)=>adj(x,y)&&!occupied(x,y,PL));
+  if(p){ PL.path=p; PL.goal=n; } else toast('走不到那裡喔！');
+}
+function walkToTile(tx,ty){
+  if(isGate(tx,ty)){ gateWarn(); return; }
+  const p=bfs(PL.x,PL.y,(x,y)=>x===tx&&y===ty);
+  if(p){ PL.path=p; PL.goal=null; } else toast('那裡走不過去喔！');
+}
+function stepPath(){
+  if(!PL.path||!PL.path.length){ PL.path=null; if(PL.goal){ const n=PL.goal; PL.goal=null; if(Math.abs(PL.x-n.x)+Math.abs(PL.y-n.y)===1){ PL.dir=dirTo(PL,n); talkTo(n); } } return; }
+  const [nx,ny]=PL.path[0]; const dir=nx>PL.x?'right':nx<PL.x?'left':ny>PL.y?'down':'up';
+  if(tryStep(dir)) PL.path.shift(); else { PL.path=null; PL.goal=null; }
+}
+function facingNpc(){ const [dx,dy]=DIRS[PL.dir]; return npcAt(PL.x+dx,PL.y+dy); }
+function worldActive(){ return S && !$('#game').classList.contains('hidden') && $('#modal').classList.contains('hidden') && $('#cert').classList.contains('hidden'); }
+let bubble=null;
+function talkTo(n){
+  held.clear(); PL.path=null;
+  n.dir=dirTo(n,PL); if(n.wander){ n.wt=3; }
+  if(hqTalk(n)) return;
+  if(n.mission){ openMission(n.mission); return; }
+  bubble={n, text:n.chat, t:3};
+}
+function interactKey(){
+  if(!worldActive()) return; const n=facingNpc(); if(n){ talkTo(n); return; }
+  const [dx,dy]=DIRS[PL.dir]; if(tileAt(PL.x+dx,PL.y+dy)==='K') bubble={n:{px:11.5*TS,py:22*TS-24}, text:'小孔廟：紀念至聖先師孔子，要愛護古蹟喔 🙏', t:4};
+}
+const held=new Set(), order=[];
+const KEYS={ArrowUp:'up',ArrowDown:'down',ArrowLeft:'left',ArrowRight:'right',w:'up',s:'down',a:'left',d:'right',W:'up',S:'down',A:'left',D:'right'};
+document.addEventListener('keydown',e=>{
+  if(!worldActive()) return;
+  const k=KEYS[e.key];
+  if(k){ e.preventDefault(); if(!held.has(k)){ held.add(k); order.push(k); } PL.path=null; PL.goal=null; }
+  else if(e.key===' '||e.key==='Enter'){ e.preventDefault(); interactKey(); }
+});
+document.addEventListener('keyup',e=>{ const k=KEYS[e.key]; if(k) held.delete(k); });
+window.addEventListener('blur',()=>held.clear());
+function curDir(){ for(let i=order.length-1;i>=0;i--) if(held.has(order[i])) return order[i]; order.length=0; return null; }
+// 觸控方向鍵
+document.querySelectorAll('#pad [data-k]').forEach(b=>{ const k=b.dataset.k;
+  b.addEventListener('pointerdown',e=>{ e.preventDefault(); held.add(k); order.push(k); PL.path=null; PL.goal=null; try{b.setPointerCapture(e.pointerId);}catch(_){} });
+  ['pointerup','pointercancel','lostpointercapture'].forEach(ev=>b.addEventListener(ev,()=>held.delete(k))); });
+$('#padA').addEventListener('pointerdown',e=>{ e.preventDefault(); interactKey(); });
+// 點地圖移動
+const cam={x:0,y:0};
+cv.addEventListener('click',e=>{
+  if(!worldActive()) return;
+  const r=cv.getBoundingClientRect(), wx=(e.clientX-r.left)/r.width*VW+cam.x, wy=(e.clientY-r.top)/r.height*VH+cam.y;
+  const tx=Math.floor(wx/TS), ty=Math.floor(wy/TS);
+  const n=NPCS.find(n=>Math.abs(n.px+16-wx)<20 && wy>n.py-18 && wy<n.py+34) || npcAt(tx,ty);
+  if(n) walkToNpc(n); else walkToTile(tx,ty);
+});
+
+/* ---------------- 隱藏任務 ---------------- */
+// 一開始不顯示，玩家在校園探索時才會「發現」。每完成一個：+20 分、+10 綠幣、解鎖一套造型。
+const HQ_PT=20, HQ_COIN=10;
+const HQ={
+  litter:{ic:'🗑️', name:'淨灘不如淨校園', d:'撿起散落在校園各處的 6 個垃圾', acc:'cap'},
+  eco:   {ic:'🔍', name:'校園生物觀察家', d:'找到躲在校園裡的 5 種小動物', acc:'bow'},
+  talk:  {ic:'📣', name:'淨零宣傳大使', d:'和校園裡 4 位同學聊聊減碳', acc:'vest'},
+  cup:   {ic:'🥤', name:'環保杯失物招領', d:'找到同學遺失的環保杯，交給廚房的營養師', acc:'leaf'},
+  visit: {ic:'🗺️', name:'校園探險家', d:'走遍司令台、小孔廟、北門、南大門、光電球場、溪畔步道', acc:'helmet'}
+};
+const ACC={
+  cap:   {name:'環保小帽',   look:{hat:'cap',hatColor:'#2e9d5b'}},
+  bow:   {name:'蝴蝶結',     look:{bow:true}},
+  vest:  {name:'宣傳大使背心',look:{vest:'#7ed957'}},
+  leaf:  {name:'綠葉小法杖', look:{item:'leaf'}},
+  helmet:{name:'探險安全帽', look:{hat:'helmet'}}
+};
+const LITTER=[[9,18,'🥤'],[25,24,'📄'],[46,19,'🥫'],[13,9,'🍬'],[51,10,'🛍️'],[41,31,'🧃']];
+const ANIMALS=[
+  {k:'butterfly',x:6,y:24,e:'🦋',name:'蝴蝶',fact:'蝴蝶喜歡原生的開花植物，校園花圃就是牠的加油站！'},
+  {k:'ladybug',x:13,y:23,e:'🐞',name:'瓢蟲',fact:'瓢蟲會吃蚜蟲，是菜圃的好幫手，不用噴農藥！'},
+  {k:'squirrel',x:45,y:9,e:'🐿️',name:'松鼠',fact:'大樹是松鼠的家，保護老樹就是保護牠們。'},
+  {k:'egret',x:51,y:30,e:'🦢',name:'白鷺鷥',fact:'溪水乾淨，白鷺鷥才會來抓小魚。'},
+  {k:'frog',x:48,y:26,e:'🐸',name:'青蛙',fact:'青蛙是環境的指標，有青蛙代表水和土地很健康。'}
+];
+const CUP_AT=[2,17];
+const VISITS={
+  stage:{name:'司令台',   at:(x,y)=>tileAt(x,y)==='Q'},
+  temple:{name:'小孔廟',  at:(x,y)=>(x===11||x===12)&&y===24},
+  north:{name:'北門',     at:(x,y)=>y===2&&(x===16||x===17)},
+  south:{name:'南大門',   at:(x,y)=>y===34&&x>=16&&x<=18},
+  court:{name:'光電球場', at:(x,y)=>tileAt(x,y)==='C'},
+  river:{name:'溪畔步道', at:(x,y)=>x>=50&&x<=51}
+};
+function hqInit(){ S.hq=Object.assign({litter:{},eco:{},talk:{},cup:0,visit:{},done:{},seen:{}},S.hq||{}); }
+function hqProg(k){ const h=S.hq;
+  if(k==='litter') return [Object.keys(h.litter).length,LITTER.length];
+  if(k==='eco') return [Object.keys(h.eco).length,ANIMALS.length];
+  if(k==='talk') return [Object.keys(h.talk).length,4];
+  if(k==='cup') return [h.cup,2];
+  if(k==='visit') return [Object.keys(h.visit).length,Object.keys(VISITS).length]; }
+function hqSeen(k){ if(!S.hq.seen[k]){ S.hq.seen[k]=1; save(); toast(`🔍 發現隱藏任務：${HQ[k].ic}「${HQ[k].name}」！`); } }
+function hqCheck(k){
+  const [a,b]=hqProg(k); if(a<b||S.hq.done[k]) return;
+  S.hq.done[k]=1; S.coins+=HQ_COIN; save(); beep(true);
+  setTimeout(()=>toast(`🎉 完成隱藏任務「${HQ[k].name}」！+${HQ_PT} 分、+${HQ_COIN} 綠幣，解鎖造型「${ACC[HQ[k].acc].name}」`),900);
+  renderAll(); submitScore();
+}
+function hqStep(){ // 每走到一格檢查一次
+  if(!S) return; hqInit(); const h=S.hq, x=PL.x, y=PL.y;
+  const li=LITTER.findIndex(([lx,ly])=>lx===x&&ly===y);
+  if(li>=0&&!h.litter[li]){ hqSeen('litter'); h.litter[li]=1; save(); const [a,b]=hqProg('litter'); bubble={n:PL,text:`撿起垃圾 ${LITTER[li][2]}（${a}/${b}）`,t:2}; hqCheck('litter'); }
+  for(const an of ANIMALS) if(!h.eco[an.k]&&Math.abs(an.x-x)+Math.abs(an.y-y)<=1){ hqSeen('eco'); h.eco[an.k]=1; save(); const [a,b]=hqProg('eco'); bubble={n:PL,text:`${an.e} 發現${an.name}！（${a}/${b}）`,t:3}; setTimeout(()=>toast('💡 '+an.fact),300); hqCheck('eco'); }
+  if(h.cup===0&&x===CUP_AT[0]&&y===CUP_AT[1]){ hqSeen('cup'); h.cup=1; save(); bubble={n:PL,text:'撿到一個環保杯🥤 上面寫著「廚房」……',t:3}; }
+  for(const [k,v] of Object.entries(VISITS)) if(!h.visit[k]&&v.at(x,y)){ h.visit[k]=1; save(); if(Object.keys(h.visit).length>=2){ hqSeen('visit'); const [a,b]=hqProg('visit'); toast(`🗺️ 探險：${v.name}（${a}/${b}）`); } hqCheck('visit'); }
+}
+function hqTalk(n){ // 和人物說話時的隱藏任務判定；回傳 true 表示這次對話被隱藏任務使用
+  if(!S) return false; hqInit(); const h=S.hq;
+  if(n.wander&&!h.talk[n.id]){ h.talk[n.id]=1; save(); if(Object.keys(h.talk).length>=2) hqSeen('talk'); hqCheck('talk'); }
+  if(n.mission==='m7'&&h.cup===1){ h.cup=2; save(); bubble={n,text:'謝謝你！這是同學遺失的環保杯，自備杯子就能少用好多一次性杯子！',t:4}; hqCheck('cup'); return true; }
+  return false;
+}
+function hqDoneCount(){ return S&&S.hq&&S.hq.done?Object.keys(S.hq.done).length:0; }
+function drawHidden(g){
+  if(!S) return; const h=S.hq||{litter:{},eco:{},cup:0};
+  g.textAlign='center'; g.textBaseline='middle';
+  LITTER.forEach(([x,y,e],i)=>{ if(h.litter[i]) return; const X=x*TS+16, Y=y*TS+20;
+    g.fillStyle='rgba(0,0,0,.2)'; g.beginPath(); g.ellipse(X,Y+8,8,3,0,0,7); g.fill();
+    g.font='16px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; g.fillText(e,X,Y);
+    if(Math.sin(gT*3+i)>.6) sparkle(g,X+9,Y-9); });
+  if(h.cup===0){ const X=CUP_AT[0]*TS+16, Y=CUP_AT[1]*TS+18; g.font='16px "Segoe UI Emoji",sans-serif'; g.fillText('🥤',X,Y); if(Math.sin(gT*2.5)>.5) sparkle(g,X+9,Y-10); }
+  ANIMALS.forEach((an,i)=>{ const X=an.x*TS+16+Math.sin(gT*1.5+i)*4, Y=an.y*TS+14+Math.sin(gT*3+i)*2;
+    g.font='18px "Segoe UI Emoji","Apple Color Emoji",sans-serif'; g.globalAlpha=h.eco[an.k]?1:.9; g.fillText(an.e,X,Y); g.globalAlpha=1;
+    if(!h.eco[an.k]&&Math.sin(gT*2+i*2)>.7) sparkle(g,X+10,Y-10); });
+}
+function sparkle(g,x,y){ g.fillStyle='#fff8b0'; g.beginPath(); for(let k=0;k<8;k++){ const a=k*Math.PI/4, r=k%2?1.5:5; g.lineTo(x+Math.cos(a)*r,y+Math.sin(a)*r); } g.closePath(); g.fill(); }
+function showHidden(){
+  hqInit(); const n=hqDoneCount();
+  let h=`<h2>🎁 隱藏任務（${n}/5）</h2><p style="color:#5a6d60">在校園裡到處走走看看，就會發現隱藏任務！每完成一個：+${HQ_PT} 分、+${HQ_COIN} 綠幣，還能解鎖造型。</p>`;
+  Object.entries(HQ).forEach(([k,q])=>{ const seen=S.hq.seen[k]||S.hq.done[k], done=S.hq.done[k], [a,b]=hqProg(k), ac=ACC[q.acc];
+    h+=`<div class="ach ${seen?'':'lock'}"><span class="e">${seen?q.ic:'❓'}</span><div style="flex:1"><b>${seen?q.name:'？？？'}</b><br><small>${seen?q.d+`（${k==='cup'?(a===0?'還沒找到杯子':a===1?'找到杯子了，交給營養師吧':'完成'):a+'/'+b}）`:'還沒發現，在校園裡找找看吧！'}</small></div>
+      ${done?`<button class="${S.acc===q.acc?'':'ghost'}" data-acc="${q.acc}" style="font-size:14px;padding:6px 10px">${S.acc===q.acc?'✓ 穿著中':'穿上「'+ac.name+'」'}</button>`:''}</div>`; });
+  if(S.acc) h+=`<div class="row"><button class="gray" data-acc="">脫下造型</button></div>`;
+  openModal(h);
+  document.querySelectorAll('[data-acc]').forEach(b=>b.onclick=()=>{ S.acc=b.dataset.acc||null; save(); setPlayerLook(); showHidden(); });
+}
+
+/* ---------------- 更新與繪製 ---------------- */
+function updateNPCs(dt){
+  for(const n of NPCS){
+    if(n.moving){ const tx=n.x*TS, ty=n.y*TS, sp=55*dt; n.px+=clamp(tx-n.px,-sp,sp); n.py+=clamp(ty-n.py,-sp,sp); n.anim+=dt; n.step=Math.floor(n.anim*6)%2?1:2; if(n.px===tx&&n.py===ty){ n.moving=false; n.step=0; } continue; }
+    if(!n.wander) continue;
+    n.wt-=dt; if(n.wt>0) continue; n.wt=1+Math.random()*2.5;
+    const d=['up','down','left','right'][Math.random()*4|0], [dx,dy]=DIRS[d], nx=n.x+dx, ny=n.y+dy;
+    n.dir=d;
+    if(tileAt(nx,ny)===n.zone && !occupied(nx,ny,n) && !UPS.has(nx+','+ny)){ n.x=nx; n.y=ny; n.moving=true; }
+  }
+}
+function update(dt){
+  gT+=dt;
+  updateCars(dt);
+  updateNPCs(dt);
+  if(bubble){ bubble.t-=dt; if(bubble.t<=0) bubble=null; }
+  if(!S) return;
+  UPS=upSolid();
+  if(PL.moving){ const tx=PL.x*TS, ty=PL.y*TS, sp=160*dt; PL.px+=clamp(tx-PL.px,-sp,sp); PL.py+=clamp(ty-PL.py,-sp,sp); PL.anim+=dt; PL.step=Math.floor(PL.anim*8)%2?1:2; if(PL.px===tx&&PL.py===ty){ PL.moving=false; hqStep(); } }
+  if(!PL.moving && worldActive()){
+    const d=curDir();
+    if(d){ tryStep(d); } else if(PL.path||PL.goal) stepPath(); else PL.step=0;
+  }
+  const n=(!PL.moving)?facingNpc():null;
+  const fk=!PL.moving&&tileAt(PL.x+DIRS[PL.dir][0],PL.y+DIRS[PL.dir][1])==='K';
+  const txt = fk ? '🙏 空白鍵：看看小孔廟' : n ? (n.mission ? `💬 空白鍵／點一下：和「${n.name}」說話（${SPOTS[n.mission].title}）` : `💬 空白鍵：和${n.name}聊天`) : '方向鍵／WASD 移動｜空白鍵 說話｜也可以直接點地圖';
+  const h=$('#hint'); if(h.textContent!==txt) h.textContent=txt;
+}
+function render(){
+  cam.x=Math.round(clamp(PL.px+16-VW/2,0,MW*TS-VW)); cam.y=Math.round(clamp(PL.py+16-VH/2,0,MH*TS-VH));
+  ctx.drawImage(mapCv,cam.x,cam.y,VW,VH,0,0,VW,VH);
+  ctx.save(); ctx.translate(-cam.x,-cam.y);
+  // 溪流波光
+  for(let i=0;i<14;i++){ const y=((gT*40+i*97)%(MH*TS)), x=52*TS+8+((i*37)%100); ctx.strokeStyle='rgba(255,255,255,.45)'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+10,y); ctx.stroke(); }
+  if(S && upCount('solar')) drawSolarUpgrade(ctx,'red');
+  drawHidden(ctx);
+  for(const c of CARS) drawCar(ctx,c);
+  // 任務光圈
+  for(const n of NPCS){ if(!n.mission||!S) continue; const b=S.best[n.mission]; if(b&&b.stars) continue; if(n.mission==='fin'&&doneCount()<NM) continue;
+    ctx.globalAlpha=.35+.2*Math.sin(gT*4); ctx.fillStyle='#ffe066'; ctx.beginPath(); ctx.ellipse(n.px+16,n.py+29,14,5,0,0,7); ctx.fill(); ctx.globalAlpha=1; }
+  const ents=NPCS.map(n=>({k:'p',o:n,py:n.py}));
+  if(S) ents.push({k:'p',o:PL,py:PL.py});
+  for(const p of PROPS) if(p.x*TS>cam.x-80&&p.x*TS<cam.x+VW+32&&p.y*TS>cam.y-32&&p.y*TS<cam.y+VH+80) ents.push({k:'r',o:p,py:p.py});
+  if(S){ for(const k of ['led','bike','rain','comp']) if(upCount(k)) UP_SPOTS[k].forEach(([x,y])=>ents.push({k:'r',o:{c:k,x,y},py:y*TS}));
+    UP_SPOTS.tree.slice(0,upCount('tree')).forEach(([x,y])=>ents.push({k:'r',o:{c:'sap',x,y},py:y*TS})); }
+  for(const B of COURTS) ents.push({k:'c',o:B,py:B.y2*TS+TS-1});
+  ents.push({k:'c',o:STAGE,py:13*TS+TS-1});
+  ents.sort((a,b)=>a.py-b.py||(a.k==='r')-(b.k==='r'));
+  for(const e of ents){ if(e.k==='c') drawCanopy(ctx,e.o); else if(e.k==='r') drawProp(ctx,e.o); else drawPerson(ctx,e.o.px,e.o.py,e.o.dir,e.o.look,e.o.step); }
+  // 名牌與驚嘆號
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  for(const n of NPCS){
+    if(!n.mission) continue;
+    const s=SPOTS[n.mission], done=S&&S.best[n.mission]&&S.best[n.mission].stars, lock=n.mission==='fin'&&S&&doneCount()<NM;
+    ctx.font='bold 12px "Microsoft JhengHei",sans-serif'; const w=ctx.measureText(n.name).width+26;
+    ctx.fillStyle=done?'#2f9e57':lock?'#888':'#d9822b'; ctx.strokeStyle='rgba(43,34,51,.85)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.roundRect(n.px+16-w/2,n.py+33,w,16,8); ctx.fill(); ctx.stroke();
+    ctx.font='10px sans-serif'; ctx.fillText(s.ic,n.px+16-w/2+9,n.py+41.5);
+    ctx.font='bold 12px "Microsoft JhengHei",sans-serif'; ctx.fillStyle='#fff'; ctx.fillText(n.name,n.px+16+6,n.py+41.5);
+    const mark = done ? '★' : lock ? '?' : '!';
+    const by=n.py-22+(done?0:Math.sin(gT*5)*3);
+    ctx.lineWidth=2; ctx.strokeStyle=OL; ctx.fillStyle=done?'#9be3a8':lock?'#ddd':'#ffe066';
+    ctx.beginPath(); ctx.roundRect(n.px+7,by-10,18,20,6); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(n.px+13,by+10); ctx.lineTo(n.px+16,by+15); ctx.lineTo(n.px+19,by+10); ctx.fill(); ctx.stroke(); ctx.fillRect(n.px+13.5,by+8,5,3);
+    ctx.fillStyle=OL; ctx.font='900 15px sans-serif'; ctx.fillText(mark,n.px+16,by+1);
+  }
+  // 主角名牌
+  if(S){ ctx.font='bold 11px "Microsoft JhengHei",sans-serif'; const w=ctx.measureText(S.name).width+12; ctx.fillStyle='#2f7fd1'; ctx.strokeStyle='rgba(43,34,51,.85)'; ctx.lineWidth=1.5; ctx.beginPath(); ctx.roundRect(PL.px+16-w/2,PL.py+33,w,15,7); ctx.fill(); ctx.stroke(); ctx.fillStyle='#fff'; ctx.fillText(S.name,PL.px+16,PL.py+41); }
+  // 面向 NPC 的提示箭頭
+  const f=S&&!PL.moving?facingNpc():null;
+  if(f&&!f.mission){ const ax=f.px+16, ay=f.py-14+Math.sin(gT*6)*3; ctx.fillStyle='#fff'; ctx.strokeStyle=OL; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(ax-7,ay-6); ctx.lineTo(ax+7,ay-6); ctx.lineTo(ax,ay+3); ctx.closePath(); ctx.fill(); ctx.stroke(); }
+  // 聊天泡泡
+  if(bubble){ const n=bubble.n; ctx.font='bold 13px "Microsoft JhengHei",sans-serif'; const w=ctx.measureText(bubble.text).width+18, x=n.px+16-w/2, y=n.py-42;
+    ctx.fillStyle='#fff'; ctx.strokeStyle=OL; ctx.lineWidth=2; ctx.beginPath(); ctx.roundRect(x,y,w,24,10); ctx.fill(); ctx.stroke(); ctx.fillStyle=OL; ctx.fillText(bubble.text,n.px+16,y+12.5); }
+  ctx.restore();
+  // 柔和暗角
+  const gr=ctx.createRadialGradient(VW/2,VH/2,VH*.45,VW/2,VH/2,VH*.95); gr.addColorStop(0,'rgba(0,0,0,0)'); gr.addColorStop(1,'rgba(20,30,20,.28)'); ctx.fillStyle=gr; ctx.fillRect(0,0,VW,VH);
+  renderMini();
+}
+const miniCtx=$('#mini').getContext('2d');
+function renderMini(){
+  const m=miniCtx; m.clearRect(0,0,$('#mini').width,$('#mini').height); m.drawImage(miniCv,0,0);
+  for(const n of NPCS){ if(!n.mission) continue; const done=S&&S.best[n.mission]&&S.best[n.mission].stars; m.fillStyle=done?'#2f9e57':'#ffcf3f'; m.strokeStyle=OL; m.lineWidth=1; m.fillRect(n.x*MS-2,n.y*MS-2,6,6); m.strokeRect(n.x*MS-2,n.y*MS-2,6,6); }
+  m.strokeStyle='rgba(255,255,255,.9)'; m.lineWidth=1; m.strokeRect(cam.x/TS*MS,cam.y/TS*MS,VW/TS*MS,VH/TS*MS);
+  m.fillStyle='#e2574c'; m.beginPath(); m.arc(PL.px/TS*MS+1.5,PL.py/TS*MS+1.5,3,0,7); m.fill(); m.strokeStyle='#fff'; m.stroke();
+}
+let lastT=performance.now();
+function loop(now){
+  const dt=Math.min(.05,(now-lastT)/1000); lastT=now;
+  try{ update(dt); render(); }catch(e){ console.error(e); ctx.setTransform(1,0,0,1,0,0); }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+// 開始畫面的角色預覽
+document.querySelectorAll('.avs canvas').forEach((c,i)=>drawFace(c,LOOKS[i]));
+function setPlayerLook(){ const i=(typeof S.av==='number'&&LOOKS[S.av])?S.av:0; hqInit(); PL.look=Object.assign({},LOOKS[i],(S.acc&&ACC[S.acc])?ACC[S.acc].look:{}); }
+
+$('#tUp').onclick=showUpgrades; $('#tAch').onclick=showAch; $('#tHid').onclick=showHidden; $('#tBoard').onclick=()=>showBoard('all'); $('#tHelp').onclick=()=>showHelp(false);
+document.addEventListener('keydown',e=>{
+  if($('#modal').classList.contains('hidden')) return;
+  if(/^[1-4]$/.test(e.key)){ const bs=document.querySelectorAll('#stepBox .opts button'); const b=bs[+e.key-1]; if(b&&!b.disabled) b.click(); }
+  else if(e.key==='Enter'){ const b=document.querySelector('#stepBox .row button:not(:disabled)'); if(b&&document.activeElement!==b){ e.preventDefault(); b.click(); } }
+});
+</script>
+</body>
+</html>
