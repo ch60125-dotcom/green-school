@@ -83,7 +83,7 @@ h1,h2,h3{margin:.3em 0}
 #mini{position:absolute;left:10px;bottom:10px;width:168px;height:132px;border:3px solid #fff8e6;border-radius:8px;box-shadow:0 3px 10px rgba(0,0,0,.35);pointer-events:none;z-index:4}
 #hint{position:absolute;left:50%;top:10px;transform:translateX(-50%);background:rgba(36,40,50,.82);color:#fff;border-radius:10px;padding:5px 14px;font-size:14px;pointer-events:none;white-space:nowrap;max-width:94%;overflow:hidden;text-overflow:ellipsis;z-index:4}
 #mapBox #pad{left:auto;right:10px}
-.avs canvas{display:block;width:48px;height:48px}
+.avs canvas{display:block;width:60px;height:60px}
 .avs{flex-wrap:wrap}
 .avs .avc{display:flex;flex-direction:column;align-items:center;padding:4px 8px}
 .avs .avc small{font-size:11px;color:var(--g);font-weight:bold;white-space:nowrap}
@@ -213,7 +213,7 @@ table.board tr.me{background:#fff4c2;font-weight:bold}
     </div>
   </div>
   <div class="field"><label>選擇你的角色</label>
-    <div class="avs"><button data-av="0" class="on"><canvas width="48" height="48"></canvas></button><button data-av="1"><canvas width="48" height="48"></canvas></button><button data-av="2"><canvas width="48" height="48"></canvas></button><button data-av="3"><canvas width="48" height="48"></canvas></button><button data-av="custom" class="avc"><canvas width="48" height="48"></canvas><small>🎨 自己打扮</small></button></div>
+    <div class="avs"><button data-av="0" class="on"><canvas width="72" height="72"></canvas></button><button data-av="1"><canvas width="72" height="72"></canvas></button><button data-av="2"><canvas width="72" height="72"></canvas></button><button data-av="3"><canvas width="72" height="72"></canvas></button><button data-av="custom" class="avc"><canvas width="72" height="72"></canvas><small>🎨 自己打扮</small></button></div>
   </div>
   <div class="err" id="startErr"></div>
   <div class="row"><button id="btnGo" style="font-size:20px;padding:12px 30px">出發！</button></div>
@@ -1942,9 +1942,9 @@ function renderDresser(){
     closeModal(); };
   $('#dCancel').onclick=closeModal;
 }
-function refreshCustomTile(){ const c=document.querySelector('.avc canvas'); if(c) paintAvatar(c,buildLook(pickCustom||PRESETS[0]),'down',1.5,7); }
+function refreshCustomTile(){ const c=document.querySelector('.avc canvas'); if(c) paintAvatar(c,buildLook(pickCustom||PRESETS[0]),'down',1.55,19); }
 // 開始畫面的角色預覽
-document.querySelectorAll('.avs button:not(.avc) canvas').forEach((c,i)=>paintAvatar(c,buildLook(PRESETS[i]),'down',1.5,7));
+document.querySelectorAll('.avs button:not(.avc) canvas').forEach((c,i)=>paintAvatar(c,buildLook(PRESETS[i]),'down',1.55,19));
 pickCustom=Object.assign({},PRESETS[0]); refreshCustomTile();
 function setPlayerLook(){
   hqInit();
