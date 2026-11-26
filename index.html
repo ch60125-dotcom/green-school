@@ -218,6 +218,8 @@ table.board tr.me{background:#fff4c2;font-weight:bold}
   <div class="err" id="startErr"></div>
   <div class="row"><button id="btnGo" style="font-size:20px;padding:12px 30px">出發！</button></div>
   <div class="row" id="contRow"></div>
+  <div class="row"><button class="ghost" id="btnGuest">👀 訪客模式</button></div>
+  <div style="color:#5a6d60;font-size:14px">訪客不用輸入班級，選好難度就能玩；成績不上排行榜，關掉分頁後進度就不保留。</div>
 </div>
 
 <!-- 遊戲主畫面 -->
@@ -429,8 +431,11 @@ function beep(ok){
 }
 
 /* ---------------- 存檔 ---------------- */
+const GUEST_KEY = 'netzero_campus_guest';   // 訪客進度只存在這個分頁（sessionStorage），不會蓋掉學生的紀錄
 function load(){ try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch(e){ return null; } }
-function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function loadGuest(){ try{ return JSON.parse(sessionStorage.getItem(GUEST_KEY)||'null'); }catch(e){ return null; } }
+function save(){ try{ if(S&&S.guest) sessionStorage.setItem(GUEST_KEY, JSON.stringify(S)); else localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){} }
+function whoText(){ return S.guest ? '👀 訪客'+(S.name!=='訪客'?' '+S.name:'') : S.cls+' '+S.name; }
 function newSid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,10); }
 
 /* ---------------- 計分 ---------------- */
@@ -470,7 +475,21 @@ $('#inCls').addEventListener('input',e=>{
     $('#contRow').innerHTML=`<div style="width:100%;color:#5a6d60">這台裝置有「${esc(old.cls)} ${esc(old.name)}」的遊戲紀錄（${old.lvLabel||LVNAME[old.lv]}，${(function(){S=old;const t=totalScore();S=null;return t;})()} 分）</div><button class="ghost" id="btnCont">繼續上次的遊戲</button>`;
     $('#btnCont').onclick=()=>{ S=old; enterGame(); };
   }
+  const g=loadGuest();
+  if(g && g.guest){
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<button class="ghost" id="btnGCont">👀 繼續訪客遊戲</button>';
+    $('#btnGuest').parentNode.after(row);
+    $('#btnGCont').onclick=()=>{ S=g; enterGame(); };
+  }
 })();
+$('#btnGuest').onclick=()=>{
+  if(!pickLv) return $('#startErr').textContent='訪客也要先選擇挑戰難度喔！';
+  const name=$('#inName').value.trim()||'訪客';
+  S={guest:true,cls:'',name,lv:pickLv,custom:Object.assign({},pickCustom||PRESETS[0]),sid:newSid(),best:{},coins:0,up:{},ach:[],t:0,zeroShown:false};
+  save(); enterGame(true);
+  setTimeout(()=>toast('👀 訪客模式：成績不上排行榜，關掉分頁後進度不保留'),400);
+};
 $('#btnGo').onclick=()=>{
   const cls=$('#inCls').value.trim(), name=$('#inName').value.trim();
   if(!/^\d{3,4}$/.test(cls)) return $('#startErr').textContent='請輸入三或四位數的班級，例如 501';
@@ -493,7 +512,7 @@ function enterGame(isNew){
 
 /* ---------------- 地圖與 HUD ---------------- */
 function renderAll(){
-  $('#hWho').textContent=`${S.cls} ${S.name}・${LVNAME[S.lv]}`;
+  $('#hWho').textContent=`${whoText()}・${LVNAME[S.lv]}`;
   $('#hCoin').textContent=S.coins;
   $('#hScore').textContent=totalScore();
   const idx=carbonIdx();
@@ -914,7 +933,7 @@ function showAch(){
   h+=`<p style="color:#5a6d60">遊戲時間：${fmtTime(S.t)}</p><div class="row">${S.best.fin&&S.best.fin.stars?'<button id="aCert">📜 列印獎狀</button>':''}<button class="gray" id="aReset">重新開始（清除紀錄）</button></div>`;
   openModal(h);
   if($('#aCert')) $('#aCert').onclick=()=>{ closeModal(); showCert(); };
-  $('#aReset').onclick=()=>{ if(confirm('確定要清除這台裝置上的遊戲紀錄，從頭開始嗎？')){ try{localStorage.removeItem(SAVE_KEY);}catch(e){} location.reload(); } };
+  $('#aReset').onclick=()=>{ if(confirm(S.guest?'確定要清除訪客的遊戲紀錄，從頭開始嗎？':'確定要清除這台裝置上的遊戲紀錄，從頭開始嗎？')){ try{ if(S.guest) sessionStorage.removeItem(GUEST_KEY); else localStorage.removeItem(SAVE_KEY); }catch(e){} clearInterval(tickT); S=null; location.reload(); } };
 }
 function zeroCelebrate(){
   if(!$('#modal').classList.contains('hidden') || S.zeroShown) return;
@@ -943,14 +962,15 @@ function showHelp(first){
 
 /* ---------------- 排行榜 ---------------- */
 function submitScore(){
-  if(!SCRIPT_URL||!S) return;
+  if(!SCRIPT_URL||!S||S.guest) return;   // 訪客不上排行榜
   const q=new URLSearchParams({action:'submit',pid:S.sid,cls:S.cls,nick:S.name,lv:S.lv,score:totalScore(),missions:doneCount(),hidden:hqDoneCount(),done:(S.best.fin&&S.best.fin.stars)?1:0,time:Math.round(S.t)});
   fetch(SCRIPT_URL+'?'+q).then(r=>r.json()).then(d=>{ if(d&&d.ok&&d.rank) setTimeout(()=>toast(`🏆 成績已上傳！目前全校第 ${d.rank} 名`),1500); }).catch(()=>{});
 }
 function showBoard(scope){
   scope=scope||'all';
-  openModal(`<h2>🏆 排行榜</h2><div class="row" style="margin-top:0"><button class="${scope==='all'?'':'ghost'}" id="bA">全校</button><button class="${scope==='cls'?'':'ghost'}" id="bC">${esc(S.cls)} 班</button></div><div id="bL" style="margin-top:12px">讀取中…</div>`);
-  $('#bA').onclick=()=>showBoard('all'); $('#bC').onclick=()=>showBoard('cls');
+  openModal(`<h2>🏆 排行榜</h2><div class="row" style="margin-top:0"><button class="${scope==='all'?'':'ghost'}" id="bA">全校</button>${S.guest?'':`<button class="${scope==='cls'?'':'ghost'}" id="bC">${esc(S.cls)} 班</button>`}</div>${S.guest?`<div class="fact" style="margin-top:10px">👀 你是訪客，成績不會列入排行榜。你目前的成績：<b>${totalScore()}</b> 分</div>`:''}<div id="bL" style="margin-top:12px">讀取中…</div>`);
+  $('#bA').onclick=()=>showBoard('all'); if($('#bC')) $('#bC').onclick=()=>showBoard('cls');
+  if(S.guest) scope='all';
   if(!SCRIPT_URL){ $('#bL').innerHTML='<p>排行榜還沒有設定喔！請老師依照「排行榜設定說明」完成設定。</p><p>你目前的成績：<b>'+totalScore()+'</b> 分</p>'; return; }
   const q=new URLSearchParams({action:'top',cls:scope==='cls'?S.cls:'',pid:S.sid});
   fetch(SCRIPT_URL+'?'+q).then(r=>r.json()).then(d=>{
@@ -965,7 +985,7 @@ function showBoard(scope){
 function showCert(){
   const d=new Date(), roc=d.getFullYear()-1911;
   $('#cert').innerHTML=`<div class="certIn"><h1>獎　狀</h1>
-    <p><b style="font-size:30px">${esc(S.cls)} 班　${esc(S.name)}</b></p>
+    <p><b style="font-size:30px">${S.guest?esc(S.name==='訪客'?'貴賓':S.name):esc(S.cls)+' 班　'+esc(S.name)}</b></p>
     <p>在「淨零綠校園大作戰」中，完成十大淨零任務，取得節電、資源循環、低碳生活、永續綠、水資源五枚校園標章，並通過淨零大會考，為校園減碳盡一份心力，表現優異，特頒此狀，以資鼓勵。</p>
     <div style="font-size:26px">榮獲「淨零小隊長」稱號（${LVNAME[S.lv]}級）</div>
     <div style="font-size:30px;letter-spacing:6px">${BADGES.filter(hasBadge).map(b=>b.ic).join(' ')}</div>
